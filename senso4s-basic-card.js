@@ -1,0 +1,174 @@
+/* Senso4s Basic Lovelace Card v0.1.0b1. MIT license. Read-only. */
+(()=>{
+"use strict";
+const TAG="senso4s-basic-card", VERSION="0.1.0b1";
+const L={"sv":{"sub":"Bluetooth-våg för gasolflaska","weight":"Gasol kvar","level":"Gasolnivå","battery":"Batteri","signal":"Bluetooth-signal","seen":"Senast behandlad BLE-data","changed":"Senast ändrad vikt i HA","notice":"Senaste BLE-kontakt är inte samma sak som en ny fysisk vägning. Tid för viktändring är Home Assistants tidsstämpel.","history":"Historik","diagnostics":"Diagnostik","recent":"Senaste ändringar","reload":"Uppdatera","noScale":"Ingen Senso4s-våg hittades","multi":"Flera Senso4s-vågar hittades. Välj en gas_remaining-entitet i kortets konfiguration.","missing":"Sensordata saknas","fresh":"BLE-data mottagen","stale":"Gammal BLE-data","noTime":"BLE-tidsstämpel saknas","error":"Vågen rapporterar fel","calibration":"Kalibrering behövs","low":"Låg gasolnivå","capacity":"Flaskkapacitet","mode":"Användningsläge","calibrationTitle":"Behöver kalibrering","errorTitle":"Felstatus","lowTitle":"Låg gasol","yes":"Ja","no":"Nej","unavailable":"Ej tillgängligt","loading":"Hämtar historik…","empty":"Ingen historik med värdeförändringar","range":"Historikperiod","recorder":"Historiken hämtas från Home Assistant Recorder. Kortet är endast läsande.","hours":"timmar","min":"min","hour":"tim","days":"dygn","ago":"sedan","now":"nyss","timeMissing":"Tid saknas","unit":"kg"},"en":{"sub":"Bluetooth gas cylinder scale","weight":"Gas remaining","level":"Gas level","battery":"Battery","signal":"Bluetooth signal","seen":"Last processed BLE data","changed":"Last weight change in HA","notice":"The most recent BLE contact does not imply a new physical weighing. Weight-change timestamps come from Home Assistant.","history":"History","diagnostics":"Diagnostics","recent":"Recent changes","reload":"Refresh","noScale":"No Senso4s scale found","multi":"Multiple Senso4s scales found. Select a gas_remaining entity in the card configuration.","missing":"Sensor data unavailable","fresh":"BLE data received","stale":"Stale BLE data","noTime":"No BLE timestamp","error":"Scale reports an error","calibration":"Calibration needed","low":"Low gas","capacity":"Cylinder capacity","mode":"Usage mode","calibrationTitle":"Needs calibration","errorTitle":"Error status","lowTitle":"Low gas","yes":"Yes","no":"No","unavailable":"Unavailable","loading":"Loading history…","empty":"No recorded changes","range":"History period","recorder":"History comes from Home Assistant Recorder. This card is read-only.","hours":"hours","min":"min","hour":"hr","days":"days","ago":"ago","now":"just now","timeMissing":"No timestamp","unit":"kg"}};
+const CSS="\n:host{display:block;color:var(--primary-text-color);font-family:var(--primary-font-family,Roboto,sans-serif)}\n*{box-sizing:border-box}ha-card{padding:18px;overflow:hidden;background:var(--ha-card-background,var(--card-background-color))}\n.top{display:flex;justify-content:space-between;gap:10px;align-items:center;margin-bottom:18px}\n.brand{display:flex;align-items:center;gap:10px}.logo{display:grid;place-items:center;width:43px;height:43px;border-radius:13px;background:linear-gradient(140deg,#26b4ff,#065bba);color:#fff}\n.logo ha-icon{--mdc-icon-size:25px}h2{margin:0;font-size:18px;font-weight:750;letter-spacing:-.3px}\n.muted,.small{font-size:11px;color:var(--secondary-text-color);line-height:1.5}.status{font-size:11px;border:1px solid var(--divider-color);border-radius:16px;padding:6px 9px;white-space:nowrap;display:flex;gap:7px;align-items:center}\n.status:before{content:\"\";height:8px;width:8px;border-radius:50%;background:var(--success-color,#2ed39c)}\n.status.warn:before{background:var(--warning-color,#ffac35)}.status.bad:before{background:var(--error-color,#ef6363)}\n.hero{display:grid;grid-template-columns:120px 1fr;gap:15px;align-items:center;padding:2px 0 16px;border-bottom:1px solid var(--divider-color)}\n.bottle{width:104px;height:161px;margin:auto;display:flex;flex-direction:column;align-items:center}\n.handle{width:54px;height:20px;border:6px solid var(--primary-text-color);opacity:.92;border-bottom:0;border-radius:12px 12px 0 0}\n.neck{height:8px;width:82px;border:5px solid var(--primary-text-color);border-bottom:0;opacity:.92}\n.body{position:relative;width:103px;height:132px;border:6px solid var(--primary-text-color);border-radius:18px 18px 12px 12px;overflow:hidden;background:rgba(55,141,213,.09)}\n.fill{position:absolute;bottom:0;left:0;right:0;background:linear-gradient(150deg,#39bdff,#0876de);transition:height .35s}\n.overlay{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;color:white;text-shadow:0 1px 3px #18314a;font-weight:800}\n.overlay strong{font-size:23px}.overlay ha-icon{--mdc-icon-size:30px}\n.big{font-weight:800;font-size:37px;letter-spacing:-1px;margin:5px 0;line-height:1.2}\n.hero .small{max-width:240px}.label{font-size:12px;font-weight:650;color:var(--secondary-text-color)}\n.stats{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px;margin-top:16px}\n.stat{border-radius:12px;padding:11px;background:var(--secondary-background-color,rgba(130,130,130,.08));min-width:0}\n.stat span{display:block;font-size:11px;color:var(--secondary-text-color);margin-bottom:7px}.stat strong{font-size:18px;font-weight:750;overflow-wrap:anywhere}\n.times{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin:12px 0}\n.time{border:1px solid var(--divider-color);border-radius:12px;padding:11px;min-width:0}\n.time strong{display:block;margin:7px 0 4px;font-size:13px;overflow-wrap:anywhere}\n.hint{display:flex;gap:8px;padding:9px 0 12px;color:var(--secondary-text-color);font-size:11px;line-height:1.5}\n.hint ha-icon{--mdc-icon-size:17px;flex-shrink:0;color:var(--info-color,#40a7ea)}\n.alert{font-size:12px;border-left:3px solid var(--warning-color,#ffac35);background:var(--secondary-background-color,rgba(130,130,130,.08));padding:10px;border-radius:7px;margin:9px 0}\n.section{border-top:1px solid var(--divider-color)}button{cursor:pointer;color:inherit;font:inherit}\n.toggle{border:0;background:none;text-align:left;display:flex;justify-content:space-between;align-items:center;width:100%;padding:14px 0;font-size:14px;font-weight:700}\n.toggle ha-icon{--mdc-icon-size:20px}.panel{padding-bottom:15px}\n.tabs{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:10px}.tab,.reload{border:1px solid var(--divider-color);border-radius:9px;background:transparent;padding:7px 10px;font-size:12px}\n.tab[aria-pressed=\"true\"]{border-color:var(--primary-color,#168be1);color:var(--primary-color,#168be1)}\n.reload{margin-left:auto}.chart{width:100%;height:125px;display:block}\n.range{display:flex;justify-content:space-between;color:var(--secondary-text-color);font-size:11px;margin-bottom:9px}\n.events{max-height:260px;overflow-y:auto}.event{display:flex;justify-content:space-between;gap:10px;align-items:center;border-top:1px solid var(--divider-color);padding:9px 0;font-size:12px}\n.event time{white-space:nowrap;font-size:11px;color:var(--secondary-text-color)}\n.grid{display:grid;grid-template-columns:1fr 1fr;gap:8px}.diag{padding:11px;border:1px solid var(--divider-color);border-radius:11px}.diag strong{display:block;font-size:14px;margin-top:6px}\n.empty{padding:15px;color:var(--secondary-text-color);font-size:12px}footer{display:flex;justify-content:space-between;color:var(--secondary-text-color);font-size:10px;border-top:1px solid var(--divider-color);padding-top:10px;margin-top:8px}\n@media(max-width:410px){ha-card{padding:13px}.top{align-items:flex-start}.status{font-size:10px}.hero{grid-template-columns:100px 1fr;gap:8px}.bottle{transform:scale(.88);transform-origin:center}.big{font-size:30px}.stat{padding:9px 7px}.stat strong{font-size:15px}}\n";
+class Senso4sBasicCard extends HTMLElement {
+  constructor(){
+    this.attachShadow({mode:"open"});
+    this._config={title:"Senso4s Basic",entity:"",language:"auto",history_hours:168};
+    this._historyOpen=false;this._diagOpen=false;this._view="gas_remaining";
+    this._history=[];this._events=[];this._loaded=false;this._loading=false;this._error="";
+    this._generation=0;this._scheduled=false;this._observed=new Map();this._live=[];
+  }
+  static getStubConfig(){return {};}
+  getCardSize(){return 6;}
+  getGridOptions(){return {columns:12,rows:"auto"};}
+  setConfig(config){
+    if(!config||typeof config!=="object")throw new Error("Configuration is required");
+    const previous=JSON.stringify(this._config);
+    this._config={title:"Senso4s Basic",entity:"",language:"auto",history_hours:168,...config};
+    this._config.history_hours=Math.max(1,Math.min(720,Number(this._config.history_hours)||168));
+    if(!["auto","sv","en"].includes(this._config.language))this._config.language="auto";
+    if(JSON.stringify(this._config)!==previous){this._loaded=false;this._history=[];this._events=[];this._generation++;}
+    this._schedule();
+  }
+  set hass(hass){
+    if(!hass?.states)return;
+    this._hass=hass;
+    this._observe();
+    this._schedule();
+  }
+  get hass(){return this._hass;}
+  _lang(){return this._config.language!=="auto"?this._config.language:String(this._hass?.language||"en").toLowerCase().startsWith("sv")?"sv":"en";}
+  _t(key){return L[this._lang()][key]||key;}
+  _esc(v){return String(v??"").replaceAll("&","&amp;").replaceAll("<","&lt;").replaceAll(">","&gt;").replaceAll('"',"&quot;").replaceAll("'","&#39;");}
+  _candidates(){return Object.keys(this._hass?.states||{}).filter(id=>/^sensor\.senso4s_.+_gas_remaining$/.test(id)).sort();}
+  _prefix(){
+    const selected=String(this._config.entity||"").trim();
+    if(selected){const n=selected.replace(/^sensor\./,"").replace(/_(gas_remaining|gas_level|battery)$/,"");return /^senso4s_.+/.test(n)?n:null;}
+    const list=this._candidates();return list.length===1?list[0].slice(7,-"_gas_remaining".length):null;
+  }
+  _id(key){
+    const p=this._prefix();if(!p)return null;
+    const ids=key==="rssi"?[`sensor.${p}_signal_strength`,`sensor.${p}_rssi`]
+      :key==="error"?[`binary_sensor.${p}_error`,`binary_sensor.${p}_has_error`]
+      :["needs_calibration","low_gas"].includes(key)?[`binary_sensor.${p}_${key}`]
+      :[`sensor.${p}_${key}`];
+    return ids.find(id=>this._hass?.states?.[id])||ids[0];
+  }
+  _state(key){const id=this._id(key);return id?this._hass?.states?.[id]||null:null;}
+  _val(key){const s=this._state(key);return s&&!["unknown","unavailable","none",""].includes(s.state)?s.state:null;}
+  _number(key){const v=this._val(key);return v!==null&&Number.isFinite(Number(v))?Number(v):null;}
+  _display(key,digits=0,unit=""){
+    const n=this._number(key);if(n===null)return "—";
+    return this._esc(n.toLocaleString(this._lang()==="sv"?"sv-SE":"en-GB",{minimumFractionDigits:digits,maximumFractionDigits:digits})+(unit?" "+unit:""));
+  }
+  _date(v){const d=new Date(v||"");return Number.isFinite(d.getTime())?d.toLocaleString(this._lang()==="sv"?"sv-SE":"en-GB",{month:"2-digit",day:"2-digit",hour:"2-digit",minute:"2-digit"}):"—";}
+  _age(v){
+    const delta=Date.now()-new Date(v||"").getTime();if(!Number.isFinite(delta)||delta< -120000)return this._t("timeMissing");
+    if(delta<60000)return this._t("now");
+    const num=delta<3600000?Math.floor(delta/60000):delta<86400000?Math.floor(delta/3600000):Math.floor(delta/86400000);
+    const unit=delta<3600000?"min":delta<86400000?"hour":"days";
+    return this._lang()==="sv"?`${num} ${this._t(unit)} sedan`:`${num} ${this._t(unit)} ago`;
+  }
+  _schedule(){if(this._scheduled)return;this._scheduled=true;Promise.resolve().then(()=>{this._scheduled=false;this._render();});}
+  _observe(){
+    const keys=["gas_remaining","gas_level","battery","rssi"];
+    for(const key of keys){
+      const entity=this._state(key);if(!entity)continue;
+      const id=entity.entity_id;
+      const old=this._observed.get(id);
+      if(old&&old.state!==entity.state){
+        const ev={key,at:entity.last_changed||new Date().toISOString(),old:old.state,value:entity.state,id:`${id}|${entity.last_changed}|${entity.state}`};
+        this._live.unshift(ev);this._live=this._live.slice(0,45);
+      }
+      this._observed.set(id,{state:entity.state});
+    }
+  }
+  async _loadHistory(){
+    if(!this._hass?.callApi||this._loading||this._loaded)return;
+    const ids=["gas_remaining","gas_level","battery","rssi"].map(x=>this._id(x)).filter(id=>id&&this._hass.states[id]);
+    if(!ids.length){this._loaded=true;return;}
+    const token=++this._generation;this._loading=true;this._error="";this._schedule();
+    const start=new Date(Date.now()-this._config.history_hours*3600000).toISOString();
+    const path=`history/period/${encodeURIComponent(start)}?filter_entity_id=${encodeURIComponent(ids.join(","))}&minimal_response&no_attributes&significant_changes_only=0`;
+    try{
+      const results=await this._hass.callApi("GET",path);
+      if(token!==this._generation)return;
+      if(!Array.isArray(results))throw Error("Unexpected response");
+      const map=[];const events=[];
+      for(let j=0;j<results.length;j++){
+        const rows=results[j];if(!Array.isArray(rows)||!rows.length)continue;
+        const entity=rows.find(r=>r?.entity_id)?.entity_id||ids[j];const key=entity?.split("_").slice(-2).join("_");
+        let prev=rows[0]?.state;
+        for(let k=0;k<rows.length;k++){
+          const r=rows[k];if(!r)continue;
+          const time=r.last_changed||r.last_updated||r.lu;
+          const n=Number(r.state);
+          if(entity===this._id(this._view)&&Number.isFinite(n)&&time)map.push({t:new Date(time).getTime(),v:n});
+          if(k>0&&r.state!==prev){events.push({id:`${entity}|${time}|${r.state}`,key:entity===this._id("gas_remaining")?"gas_remaining":entity===this._id("gas_level")?"gas_level":entity===this._id("battery")?"battery":"rssi",at:time,old:prev,value:r.state});}
+          prev=r.state;
+        }
+      }
+      this._history=results;this._events=events;this._loaded=true;
+    }catch(e){if(token===this._generation){this._error=String(e?.message||e);this._loaded=true;}}
+    finally{if(token===this._generation){this._loading=false;this._schedule();}}
+  }
+  _chart(){
+    const id=this._id(this._view);
+    const results=this._history.find(rows=>rows?.some(r=>r?.entity_id===id))||[];
+    const data=results.map(r=>({t:new Date(r.last_changed||r.last_updated||r.lu||0).getTime(),v:Number(r.state)})).filter(r=>r.t&&Number.isFinite(r.v));
+    if(!data.length)return `<div class="empty">${this._esc(this._t("empty"))}</div>`;
+    const min=Math.min(...data.map(x=>x.v)),max=Math.max(...data.map(x=>x.v));
+    const span=Math.max(max-min,this._view==="gas_remaining"?.2:1),low=min-span*.15,high=max+span*.15;
+    const end=Date.now(),start=end-this._config.history_hours*3600000;
+    const x=t=>Math.max(10,Math.min(690,10+(t-start)/(end-start)*680));
+    const y=v=>Math.max(8,Math.min(128,128-(v-low)/(high-low)*118));
+    // Step chart: scale values are discrete and should not imply smooth weighing.
+    const path=data.map((p,i)=>i===0?`M${x(p.t).toFixed(1)} ${y(p.v).toFixed(1)}`:`H${x(p.t).toFixed(1)} V${y(p.v).toFixed(1)}`).join(" ");
+    return `<div class="range"><span>${this._config.history_hours} ${this._esc(this._t("hours"))}</span><span>${min.toFixed(2)}–${max.toFixed(2)} ${this._view==="gas_remaining"?"kg":this._view==="rssi"?"dBm":"%"}</span></div><svg class="chart" viewBox="0 0 700 140" role="img"><line x1="10" y1="130" x2="690" y2="130" stroke="var(--divider-color)"/><path d="${path}" fill="none" stroke="var(--info-color,#239ce5)" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/></svg>`;
+  }
+  _eventsHtml(){
+    const items=[...this._events,...this._live];const found=new Set();
+    const unique=items.filter(e=>{if(found.has(e.id))return false;found.add(e.id);return true;}).sort((a,b)=>new Date(b.at)-new Date(a.at)).slice(0,25);
+    if(!unique.length)return `<div class="empty">${this._esc(this._t("empty"))}</div>`;
+    return `<div class="events">${unique.map(e=>`<div class="event"><div><strong>${this._esc(this._t(e.key==="gas_remaining"?"weight":e.key==="gas_level"?"level":e.key==="battery"?"battery":"signal"))}</strong><div class="small">${this._esc(e.old)} → ${this._esc(e.value)}</div></div><time>${this._date(e.at)}</time></div>`).join("")}</div>`;
+  }
+  _render(){
+    if(!this._hass)return;
+    const t=k=>this._esc(this._t(k));
+    const list=this._candidates(),p=this._prefix(),weight=this._state("gas_remaining");
+    const level=this._number("gas_level"),filled=level===null?0:Math.max(0,Math.min(100,level));
+    const seen=this._state("battery")?.attributes?.last_seen;
+    const changed=weight?.last_changed;
+    const hasError=this._val("error")==="on",cal=this._val("needs_calibration")==="on",low=this._val("low_gas")==="on";
+    const age=Date.now()-new Date(seen||"").getTime();
+    let status=["fresh","good"];
+    if(!weight||this._val("gas_remaining")===null)status=["missing","warn"];
+    else if(hasError)status=["error","bad"];
+    else if(cal)status=["calibration","warn"];
+    else if(Number.isFinite(age)&&age>1800000)status=["stale","warn"];
+    else if(!Number.isFinite(age))status=["noTime","warn"];
+    const openHistory=this._historyOpen,openDiag=this._diagOpen;
+    this.shadowRoot.innerHTML=`
+<style>${CSS}</style>
+<ha-card>
+ <div class="top"><div class="brand"><div class="logo"><ha-icon icon="mdi:gas-cylinder"></ha-icon></div><div><h2>${this._esc(this._config.title||"Senso4s Basic")}</h2><div class="muted">${t("sub")}</div></div></div><span class="status ${status[1]}">${t(status[0])}</span></div>
+ ${!p||!weight?`<div class="alert">${list.length>1?t("multi"):t("noScale")}</div>`:`
+ ${hasError||cal||low?`<div class="alert">${[hasError?t("error"):"",cal?t("calibration"):"",low?t("low"):""].filter(Boolean).join(" · ")}</div>`:""}
+ <div class="hero"><div class="bottle"><div class="handle"></div><div class="neck"></div><div class="body"><div class="fill" style="height:${filled}%"></div><div class="overlay"><ha-icon icon="mdi:fire"></ha-icon><strong>${level===null?"—":Math.round(level)+"%"}</strong></div></div></div>
+ <div><div class="label">${t("weight")}</div><div class="big">${this._display("gas_remaining",2,"kg")}</div><div class="small">${t("notice")}</div></div></div>
+ <div class="stats"><div class="stat"><span>${t("level")}</span><strong>${this._display("gas_level",0,"%")}</strong></div><div class="stat"><span>${t("battery")}</span><strong>${this._display("battery",0,"%")}</strong></div><div class="stat"><span>${t("signal")}</span><strong>${this._display("rssi",0,"dBm")}</strong></div></div>
+ <div class="times"><div class="time"><span class="muted">${t("seen")}</span><strong>${this._date(seen)}</strong><span class="small">${this._esc(this._age(seen))}</span></div><div class="time"><span class="muted">${t("changed")}</span><strong>${this._date(changed)}</strong><span class="small">${this._esc(this._age(changed))}</span></div></div>
+ <div class="hint"><ha-icon icon="mdi:information-outline"></ha-icon><span>${t("notice")}</span></div>
+ <section class="section"><button class="toggle" data-toggle="history" aria-expanded="${openHistory}">${t("history")}<ha-icon icon="mdi:chevron-${openHistory?"up":"down"}"></ha-icon></button>
+ ${openHistory?`<div class="panel"><div class="tabs">${[["gas_remaining","weight"],["gas_level","level"],["battery","battery"],["rssi","signal"]].map(([key,label])=>`<button class="tab" data-view="${key}" aria-pressed="${this._view===key}">${t(label)}</button>`).join("")}<button class="reload" data-refresh="true" title="${t("reload")}">↻</button></div>${this._loading?`<div class="empty">${t("loading")}</div>`:this._error?`<div class="alert">${this._esc(this._error)}</div>`:this._chart()}<div class="small">${t("recorder")}</div><div style="font-weight:700;margin:16px 0 8px">${t("recent")}</div>${this._eventsHtml()}</div>`:""}
+ </section>
+ <section class="section"><button class="toggle" data-toggle="diag" aria-expanded="${openDiag}">${t("diagnostics")}<ha-icon icon="mdi:chevron-${openDiag?"up":"down"}"></ha-icon></button>
+ ${openDiag?`<div class="panel grid">${[["capacity",this._display("gas_capacity",2,"kg")],["mode",this._esc(this._val("usage_mode")||this._t("unavailable"))],["errorTitle",this._val("error")==="on"?t("yes"):t("no")],["calibrationTitle",this._val("needs_calibration")==="on"?t("yes"):t("no")],["lowTitle",this._val("low_gas")==="on"?t("yes"):t("no")]].map(([label,value])=>`<div class="diag"><span class="small">${t(label)}</span><strong>${value}</strong></div>`).join("")}</div>`:""}
+ </section>`}
+ <footer><span>Senso4s Basic · ${VERSION}</span><span>${t("recorder")}</span></footer>
+</ha-card>`;
+    this.shadowRoot.querySelector('[data-toggle="history"]')?.addEventListener("click",()=>{this._historyOpen=!this._historyOpen;this._schedule();if(this._historyOpen&&!this._loaded)this._loadHistory();});
+    this.shadowRoot.querySelector('[data-toggle="diag"]')?.addEventListener("click",()=>{this._diagOpen=!this._diagOpen;this._schedule();});
+    this.shadowRoot.querySelectorAll("[data-view]").forEach(btn=>btn.addEventListener("click",()=>{this._view=btn.dataset.view;this._schedule();}));
+    this.shadowRoot.querySelector("[data-refresh]")?.addEventListener("click",()=>{this._loaded=false;this._loadHistory();});
+  }
+}
+if(!customElements.get(TAG))customElements.define(TAG,Senso4sBasicCard);
+window.customCards=window.customCards||[];
+if(!window.customCards.some(card=>card.type===TAG))window.customCards.push({type:TAG,name:"Senso4s Basic",description:"Standalone gas cylinder scale card for Home Assistant",preview:false});
+console.info("[Senso4s Basic] "+VERSION);
+})();
