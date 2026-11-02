@@ -1,5 +1,17 @@
 # Changelog
 
+## 0.1.0b3 — 2026-11-02
+
+- Remove redundant gas-level, battery, and RSSI statistic tiles from the main card
+- Show battery and Bluetooth icons with their respective values alongside the gas amount
+- Move last processed BLE data and last HA weight change into the Diagnostics expander
+- Move the explanation of BLE freshness and weighing into Diagnostics
+- Preserve read-only behavior, multilingual support, historic graphs, and previous fixes
+- Add layout and diagnostic regression tests
+
+**Validation:** JavaScript syntax and 12 simulated render/behavior checks passed. Testing the layout in an actual Home Assistant dashboard is still pending.
+
+
 ## 0.1.0b2 — 2026-11-02
 
 - Fix Recorder history API query to supply `end_time` explicitly: with a 168-hour default window, HA otherwise returns only the first 24 hours from the start of the requested period
