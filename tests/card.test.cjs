@@ -98,8 +98,8 @@ test('reads history and includes discrete mass changes', async () => {
   const windowHours = (end - start) / 3600000;
   assert.ok(windowHours >= 167.9 && windowHours <= 168.1, 'complete 7-day history window');
   assert.match(card._chart(), /stroke-width="3"/);
-  assert.match(card._eventsHtml(), /9.7/);
-  assert.match(card._eventsHtml(), /9.5/);
+  assert.match(card._chart(), / H[0-9.]+ V[0-9.]+/);
+  assert.equal(card.shadowRoot.innerHTML.includes('Senaste ändringar'), false);
 });
 
 test('weight note is tucked under diagnostics and footer remains concise', async () => {
@@ -155,4 +155,152 @@ test('English diagnostic timestamps are translated', async () => {
   await Promise.resolve();
   assert.match(card.shadowRoot.innerHTML, /Last processed BLE data/);
   assert.match(card.shadowRoot.innerHTML, /Last weight change in HA/);
+});
+
+test('history only shows mass, battery, RSSI charts without a change log', async () => {
+  const card = new Card();
+  card.setConfig({ language: 'sv' });
+  let historyPath = '';
+  card.hass = { states: makeStates(), language: 'sv', callApi: async (_method, path) => {
+    historyPath = path;
+    return [[
+      { entity_id: 'sensor.' + base + '_gas_remaining', state: '9.7', last_changed: oldTime },
+      { entity_id: 'sensor.' + base + '_gas_remaining', state: '9.5', last_changed: newTime },
+    ]];
+  } };
+  card._historyOpen = true;
+  await card._loadHistory();
+  await Promise.resolve();
+  const html = card.shadowRoot.innerHTML;
+  assert.equal(html.includes('data-view="gas_level"'), false);
+  for (const key of ['gas_remaining', 'battery', 'rssi']) assert.ok(html.includes('data-view="' + key + '"'));
+  assert.equal(html.includes('Senaste ändringar'), false);
+  assert.equal(historyPath.includes('senso4s_gas_sensor_5d32_gas_level'), false);
+  assert.equal(typeof card._eventsHtml, 'undefined');
+});
+
+test('battery indicator colors follow 20 percent and 10 percent boundaries', async () => {
+  for (const [level, expected] of [[100,'good'],[20,'good'],[19,'warn'],[10,'warn'],[9,'bad']]) {
+    const states = makeStates();
+    states['sensor.' + base + '_battery'] = entity('battery', level, { last_seen: newTime });
+    const card = new Card();
+    card.setConfig({ language: 'sv' });
+    card.hass = { states, language: 'sv' };
+    await Promise.resolve();
+    assert.ok(card.shadowRoot.innerHTML.includes('class="hero-meta-item ' + expected + '" title="Batteri"'), String(level));
+  }
+});
+
+test('RSSI indicator colors are a noncalibrated signal-strength heuristic', async () => {
+  for (const [rssi, expected] of [[-49,'good'],[-70,'good'],[-71,'warn'],[-85,'warn'],[-86,'bad']]) {
+    const states = makeStates();
+    states['sensor.' + base + '_signal_strength'] = entity('signal_strength', rssi);
+    const card = new Card();
+    card.setConfig({ language: 'sv' });
+    card.hass = { states, language: 'sv' };
+    await Promise.resolve();
+    assert.ok(card.shadowRoot.innerHTML.includes('class="hero-meta-item ' + expected + '" title="Bluetooth-signal"'), String(rssi));
+  }
+});
+
+test('missing battery and RSSI are neutral, not false green', async () => {
+  const states = makeStates();
+  delete states['sensor.' + base + '_battery'];
+  delete states['sensor.' + base + '_signal_strength'];
+  const card = new Card();
+  card.setConfig({ language: 'sv' });
+  card.hass = { states, language: 'sv' };
+  await Promise.resolve();
+  assert.ok(card.shadowRoot.innerHTML.includes('class="hero-meta-item neutral" title="Batteri"'));
+  assert.ok(card.shadowRoot.innerHTML.includes('class="hero-meta-item neutral" title="Bluetooth-signal"'));
+});
+
+test('estimated empty date sits between weight and battery/RSSI in either language', async () => {
+  for (const [lang, label] of [['sv', 'Beräknat tom'], ['en', 'Estimated empty']]) {
+    const states = makeStates();
+    states['sensor.' + base + '_estimated_empty'] = entity(
+      'estimated_empty', '2026-11-29T17:00:00+01:00'
+    );
+    const card = new Card();
+    card.setConfig({ language: lang });
+    card.hass = { states, language: lang };
+    await Promise.resolve();
+    const html = card.shadowRoot.innerHTML;
+    const iWeight = html.indexOf('class="big"');
+    const iEstimate = html.indexOf('class="estimate"');
+    const iBattery = html.indexOf('class="hero-meta"');
+    assert.ok(iWeight < iEstimate && iEstimate < iBattery);
+    assert.ok(html.includes(label));
+    assert.ok(html.includes('icon="mdi:calendar-clock"'));
+    assert.ok(/29\s+(nov\.|Nov)\s+2026/.test(html));
+  }
+});
+
+test('unavailable estimated empty state shows dash instead of invented date', async () => {
+  for (const unavailable of ['unknown', 'unavailable']) {
+    const states = makeStates();
+    states['sensor.' + base + '_estimated_empty'] = entity('estimated_empty', unavailable);
+    const card = new Card();
+    card.setConfig({ language: 'sv' });
+    card.hass = { states, language: 'sv' };
+    await Promise.resolve();
+    assert.match(card.shadowRoot.innerHTML, /Beräknat tom: <strong>—<\/strong>/);
+  }
+});
+
+test('refill placeholder appears strictly below 10 percent and cannot execute', async () => {
+  for (const [percent, visible] of [[0,true],[9,true],[9.9,true],[10,false],[11,false],[95,false]]) {
+    const states = makeStates();
+    states['sensor.' + base + '_gas_level'] = entity('gas_level', percent);
+    const card = new Card();
+    card.setConfig({ language: 'en' });
+    card.hass = { states, language: 'en' };
+    await Promise.resolve();
+    const html = card.shadowRoot.innerHTML;
+    assert.equal(html.includes('Refill tank'), visible, String(percent));
+    if (visible) assert.match(html, /class="pending-btn" disabled title="Coming later"/);
+  }
+  for (const missing of ['unknown','unavailable']) {
+    const states = makeStates();
+    states['sensor.' + base + '_gas_level'] = entity('gas_level', missing);
+    const card = new Card();
+    card.setConfig({ language: 'en' });
+    card.hass = { states, language: 'en' };
+    await Promise.resolve();
+    assert.equal(card.shadowRoot.innerHTML.includes('Refill tank'), false, missing);
+  }
+});
+
+test('recalibrate and settings placeholders belong inside expanded diagnostics', async () => {
+  const card = new Card();
+  card.setConfig({ language: 'en' });
+  card.hass = { states: makeStates(), language: 'en' };
+  await Promise.resolve();
+  assert.equal(card.shadowRoot.innerHTML.includes('Recalibrate Scale'), false);
+  assert.equal(card.shadowRoot.innerHTML.includes('Settings Only'), false);
+  card._diagOpen = true;
+  card._schedule();
+  await Promise.resolve();
+  const html = card.shadowRoot.innerHTML;
+  assert.match(html, /class="pending-btn" disabled title="Coming later"><ha-icon icon="mdi:scale-balance"><\/ha-icon>Recalibrate Scale/);
+  assert.match(html, /class="pending-btn" disabled title="Coming later"><ha-icon icon="mdi:cog-outline"><\/ha-icon>Settings Only/);
+  assert.equal(html.includes('Refill tank'), false);
+});
+
+test('Swedish placeholders are localized, disabled and preserve estimated empty', async () => {
+  const states = makeStates();
+  states['sensor.' + base + '_gas_level'] = entity('gas_level', 9);
+  states['sensor.' + base + '_estimated_empty'] = entity('estimated_empty', '2026-11-29T17:00:00+01:00');
+  const card = new Card();
+  card.setConfig({ language: 'sv' });
+  card.hass = { states, language: 'sv' };
+  await Promise.resolve();
+  assert.match(card.shadowRoot.innerHTML, /Fyll på flaskan/);
+  assert.match(card.shadowRoot.innerHTML, /Beräknat tom/);
+  card._diagOpen = true;
+  card._schedule();
+  await Promise.resolve();
+  assert.match(card.shadowRoot.innerHTML, /Kalibrera vågen/);
+  assert.match(card.shadowRoot.innerHTML, /Endast inställningar/);
+  assert.equal(card.shadowRoot.innerHTML.split('class="pending-btn" disabled').length - 1, 3);
 });
