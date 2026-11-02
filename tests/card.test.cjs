@@ -247,3 +247,60 @@ test('unavailable estimated empty state shows dash instead of invented date', as
     assert.match(card.shadowRoot.innerHTML, /Beräknat tom: <strong>—<\/strong>/);
   }
 });
+
+test('refill placeholder appears strictly below 10 percent and cannot execute', async () => {
+  for (const [percent, visible] of [[0,true],[9,true],[9.9,true],[10,false],[11,false],[95,false]]) {
+    const states = makeStates();
+    states['sensor.' + base + '_gas_level'] = entity('gas_level', percent);
+    const card = new Card();
+    card.setConfig({ language: 'en' });
+    card.hass = { states, language: 'en' };
+    await Promise.resolve();
+    const html = card.shadowRoot.innerHTML;
+    assert.equal(html.includes('Refill tank'), visible, String(percent));
+    if (visible) assert.match(html, /class="pending-btn" disabled title="Coming later"/);
+  }
+  for (const missing of ['unknown','unavailable']) {
+    const states = makeStates();
+    states['sensor.' + base + '_gas_level'] = entity('gas_level', missing);
+    const card = new Card();
+    card.setConfig({ language: 'en' });
+    card.hass = { states, language: 'en' };
+    await Promise.resolve();
+    assert.equal(card.shadowRoot.innerHTML.includes('Refill tank'), false, missing);
+  }
+});
+
+test('recalibrate and settings placeholders belong inside expanded diagnostics', async () => {
+  const card = new Card();
+  card.setConfig({ language: 'en' });
+  card.hass = { states: makeStates(), language: 'en' };
+  await Promise.resolve();
+  assert.equal(card.shadowRoot.innerHTML.includes('Recalibrate Scale'), false);
+  assert.equal(card.shadowRoot.innerHTML.includes('Settings Only'), false);
+  card._diagOpen = true;
+  card._schedule();
+  await Promise.resolve();
+  const html = card.shadowRoot.innerHTML;
+  assert.match(html, /class="pending-btn" disabled title="Coming later"><ha-icon icon="mdi:scale-balance"><\/ha-icon>Recalibrate Scale/);
+  assert.match(html, /class="pending-btn" disabled title="Coming later"><ha-icon icon="mdi:cog-outline"><\/ha-icon>Settings Only/);
+  assert.equal(html.includes('Refill tank'), false);
+});
+
+test('Swedish placeholders are localized, disabled and preserve estimated empty', async () => {
+  const states = makeStates();
+  states['sensor.' + base + '_gas_level'] = entity('gas_level', 9);
+  states['sensor.' + base + '_estimated_empty'] = entity('estimated_empty', '2026-11-29T17:00:00+01:00');
+  const card = new Card();
+  card.setConfig({ language: 'sv' });
+  card.hass = { states, language: 'sv' };
+  await Promise.resolve();
+  assert.match(card.shadowRoot.innerHTML, /Fyll på flaskan/);
+  assert.match(card.shadowRoot.innerHTML, /Beräknat tom/);
+  card._diagOpen = true;
+  card._schedule();
+  await Promise.resolve();
+  assert.match(card.shadowRoot.innerHTML, /Kalibrera vågen/);
+  assert.match(card.shadowRoot.innerHTML, /Endast inställningar/);
+  assert.equal(card.shadowRoot.innerHTML.split('class="pending-btn" disabled').length - 1, 3);
+});
