@@ -1,5 +1,17 @@
 # Changelog
 
+## 0.1.0b4 — 2026-11-02
+
+- Show a localized `estimated_empty` date between gas weight and battery/RSSI indicators, with a neutral dash when absent
+- Color battery icon: green at 20%+, yellow at 10–19%, red below 10%, neutral if unavailable
+- Color Bluetooth signal icon with illustrative RSSI bands: green ≥−70 dBm, yellow −85 to below −70 dBm, red below −85 dBm, neutral if unavailable
+- Remove the verbose recent-changes log; keep graphs for remaining gas (kg), battery (%) and RSSI (dBm)
+- Add three **disabled**, localized future-action placeholders: Refill tank shown only below 10% gas, Recalibrate Scale and Settings Only under Diagnostics
+- No control operations or backend API/service calls added
+
+**Validation:** JavaScript syntax and 18 simulated component checks passed. Real Home Assistant testing is pending. Main remains unchanged.
+
+
 ## 0.1.0b3 — 2026-11-02
 
 - Remove redundant gas-level, battery, and RSSI statistic tiles from the main card
