@@ -1,5 +1,16 @@
 # Changelog
 
+## 0.1.0b6 — 2026-11-02
+
+- Remove the cylinder-capacity tile from Diagnostics; no backend entities are changed
+- Arrange the four remaining diagnostic statuses in a symmetrical two-column, two-row grid
+- Keep each heading above its icon, with consistent tile height and vertical alignment
+- Preserve all dynamic mode and status icon colors, localized accessibility labels, graphs and disabled future-action controls
+- Document the direct dashboard JavaScript resource path and optional Chromium hard-cache-refresh troubleshooting
+
+**Validation:** Source syntax and 22 simulated component tests passed. The revised layout awaits real Home Assistant visual verification; `main` is untouched.
+
+
 ## 0.1.0b5 — 2026-11-02
 
 - Replace raw diagnostic text for usage mode, error status, calibration-needed and low-gas with dynamic status icons
