@@ -111,3 +111,45 @@ test('weight note appears only once and footer remains concise', async () => {
   assert.equal(card.shadowRoot.innerHTML.split('Senaste BLE-kontakt är inte samma sak').length - 1, 1);
   assert.match(card.shadowRoot.innerHTML, /Endast läsning/);
 });
+
+test('compact hero shows battery and Bluetooth without duplicate tiles', async () => {
+  const card = new Card();
+  card.setConfig({ language: 'sv' });
+  card.hass = { states: makeStates(), language: 'sv' };
+  await Promise.resolve();
+  const html = card.shadowRoot.innerHTML;
+  assert.match(html, /9,50 kg/);
+  assert.match(html, /<ha-icon icon="mdi:battery"><\/ha-icon><strong>100 %<\/strong>/);
+  assert.match(html, /<ha-icon icon="mdi:bluetooth"><\/ha-icon><strong>[−-]51 dBm<\/strong>/);
+  assert.equal(html.includes('<div class="stats">'), false);
+  assert.equal(html.includes('<div class="times">'), false);
+  assert.equal(html.includes('Senaste BLE-kontakt är inte samma sak'), false);
+});
+
+test('measurement timestamps and BLE explanation appear only under diagnostics', async () => {
+  const card = new Card();
+  card.setConfig({ language: 'sv' });
+  card.hass = { states: makeStates(), language: 'sv' };
+  await Promise.resolve();
+  card._diagOpen = true;
+  card._schedule();
+  await Promise.resolve();
+  const html = card.shadowRoot.innerHTML;
+  assert.match(html, /Senast behandlad BLE-data/);
+  assert.match(html, /Senast ändrad vikt i HA/);
+  assert.match(html, /Flaskkapacitet/);
+  assert.equal(html.split('Senaste BLE-kontakt är inte samma sak').length - 1, 1);
+  assert.equal(html.split('<div class="times">').length - 1, 1);
+});
+
+test('English diagnostic timestamps are translated', async () => {
+  const card = new Card();
+  card.setConfig({ language: 'en' });
+  card.hass = { states: makeStates(), language: 'en' };
+  await Promise.resolve();
+  card._diagOpen = true;
+  card._schedule();
+  await Promise.resolve();
+  assert.match(card.shadowRoot.innerHTML, /Last processed BLE data/);
+  assert.match(card.shadowRoot.innerHTML, /Last weight change in HA/);
+});
