@@ -2,9 +2,9 @@
 
 A standalone, read-only Home Assistant Lovelace card for **Senso4s Basic Bluetooth gas cylinder scales**.
 
-**Beta 0.1.0b4:** Simplified Recorder history (weight, battery and RSSI graphs only), colored status icons, an estimated-empty date and future-action placeholders. The controls are disabled and make no service calls.
+**Beta 0.1.0b5:** Replaces diagnostic state text with dynamic, accessible status icons and per-mode activity symbols, while retaining the compact overview, graph simplifications and disabled future-action placeholders from 0.1.0b4.
 
-> **Beta 0.1.0b4** — development version. Real Home Assistant device testing is pending. The `main` branch is not released yet.
+> **Beta 0.1.0b5** — development version. Real Home Assistant device testing is pending. The `main` branch is not released yet.
 
 ## Features
 
@@ -17,7 +17,9 @@ A standalone, read-only Home Assistant Lovelace card for **Senso4s Basic Bluetoo
 - Bluetooth icon color (approximate heuristic): green at −70 dBm or better, yellow from below −70 through −85 dBm, red below −85 dBm; no reading shows neutral
 - Disabled **Refill tank** placeholder shown only when the reported gas level is below 10%
 - Disabled **Recalibrate Scale** and **Settings Only** placeholders in the Diagnostics expander
-- Diagnostics: BLE processing and weight-change timestamps, capacity, usage mode, error, calibration, low-gas flags
+- Diagnostics: BLE processing and weight-change timestamps, capacity, usage-mode icon (Heating, BBQ, Camping, Caravanning, Household), and color-coded error/calibration/low-gas status icons
+- Diagnostic status icons: green checkmark for explicitly inactive warnings, red for active error/low gas, yellow for calibration required, neutral question mark when unknown/unavailable
+- Icons include localized accessible labels/tooltips; usage-mode color indicates category, not a fault
 - Swedish and English UI, using Home Assistant's language by default
 - Supports different device addresses and multiple Senso4s scales via configurable entity
 - No dependency on the Wecamp heater, YAML packages, or third-party JS libraries
@@ -32,7 +34,7 @@ A fresh BLE packet can repeat the previous mass; it **does not prove that the sc
 For the first Home Assistant test, use the file from the `beta` branch:
 
 1. Copy [senso4s-basic-card.js](https://github.com/Jocke1970/HA-Senso4s-Basic-Card/blob/beta/senso4s-basic-card.js) to `/config/www/senso4s-basic-card.js`.
-2. In **Settings → Dashboards → Resources**, add `/local/senso4s-basic-card.js?v=0.1.0b4` as a **JavaScript module**.
+2. In **Settings → Dashboards → Resources**, add `/local/senso4s-basic-card.js?v=0.1.0b5` as a **JavaScript module**.
 3. Hard-refresh the browser after updating the resource.
 4. Add a **Manual** card with the following YAML:
 
