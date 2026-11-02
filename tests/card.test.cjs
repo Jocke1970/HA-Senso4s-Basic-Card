@@ -214,3 +214,36 @@ test('missing battery and RSSI are neutral, not false green', async () => {
   assert.ok(card.shadowRoot.innerHTML.includes('class="hero-meta-item neutral" title="Batteri"'));
   assert.ok(card.shadowRoot.innerHTML.includes('class="hero-meta-item neutral" title="Bluetooth-signal"'));
 });
+
+test('estimated empty date sits between weight and battery/RSSI in either language', async () => {
+  for (const [lang, label] of [['sv', 'Beräknat tom'], ['en', 'Estimated empty']]) {
+    const states = makeStates();
+    states['sensor.' + base + '_estimated_empty'] = entity(
+      'estimated_empty', '2026-11-29T17:00:00+01:00'
+    );
+    const card = new Card();
+    card.setConfig({ language: lang });
+    card.hass = { states, language: lang };
+    await Promise.resolve();
+    const html = card.shadowRoot.innerHTML;
+    const iWeight = html.indexOf('class="big"');
+    const iEstimate = html.indexOf('class="estimate"');
+    const iBattery = html.indexOf('class="hero-meta"');
+    assert.ok(iWeight < iEstimate && iEstimate < iBattery);
+    assert.ok(html.includes(label));
+    assert.ok(html.includes('icon="mdi:calendar-clock"'));
+    assert.ok(/29\s+(nov\.|Nov)\s+2026/.test(html));
+  }
+});
+
+test('unavailable estimated empty state shows dash instead of invented date', async () => {
+  for (const unavailable of ['unknown', 'unavailable']) {
+    const states = makeStates();
+    states['sensor.' + base + '_estimated_empty'] = entity('estimated_empty', unavailable);
+    const card = new Card();
+    card.setConfig({ language: 'sv' });
+    card.hass = { states, language: 'sv' };
+    await Promise.resolve();
+    assert.match(card.shadowRoot.innerHTML, /Beräknat tom: <strong>—<\/strong>/);
+  }
+});
