@@ -1,17 +1,17 @@
-/* Senso4s Basic Lovelace Card v0.1.0b3. MIT license. Read-only. */
+/* Senso4s Basic Lovelace Card v0.1.0b4. MIT license. Read-only. */
 (()=>{
 "use strict";
-const TAG="senso4s-basic-card", VERSION="0.1.0b3";
+const TAG="senso4s-basic-card", VERSION="0.1.0b4";
 const L={"sv":{"sub":"Bluetooth-våg för gasolflaska","weight":"Gasol kvar","level":"Gasolnivå","battery":"Batteri","signal":"Bluetooth-signal","seen":"Senast behandlad BLE-data","changed":"Senast ändrad vikt i HA","notice":"Senaste BLE-kontakt är inte samma sak som en ny fysisk vägning. Tid för viktändring är Home Assistants tidsstämpel.","history":"Historik","diagnostics":"Diagnostik","recent":"Senaste ändringar","reload":"Uppdatera","noScale":"Ingen Senso4s-våg hittades","multi":"Flera Senso4s-vågar hittades. Välj en gas_remaining-entitet i kortets konfiguration.","missing":"Sensordata saknas","fresh":"BLE-data mottagen","stale":"Gammal BLE-data","noTime":"BLE-tidsstämpel saknas","error":"Vågen rapporterar fel","calibration":"Kalibrering behövs","low":"Låg gasolnivå","capacity":"Flaskkapacitet","mode":"Användningsläge","calibrationTitle":"Behöver kalibrering","errorTitle":"Felstatus","lowTitle":"Låg gasol","yes":"Ja","no":"Nej","unavailable":"Ej tillgängligt","loading":"Hämtar historik…","empty":"Ingen historik med värdeförändringar","range":"Historikperiod","recorder":"Historiken hämtas från Home Assistant Recorder. Kortet är endast läsande.","readOnly":"Endast läsning","hours":"timmar","min":"min","hour":"tim","days":"dygn","ago":"sedan","now":"nyss","timeMissing":"Tid saknas","unit":"kg"},"en":{"sub":"Bluetooth gas cylinder scale","weight":"Gas remaining","level":"Gas level","battery":"Battery","signal":"Bluetooth signal","seen":"Last processed BLE data","changed":"Last weight change in HA","notice":"The most recent BLE contact does not imply a new physical weighing. Weight-change timestamps come from Home Assistant.","history":"History","diagnostics":"Diagnostics","recent":"Recent changes","reload":"Refresh","noScale":"No Senso4s scale found","multi":"Multiple Senso4s scales found. Select a gas_remaining entity in the card configuration.","missing":"Sensor data unavailable","fresh":"BLE data received","stale":"Stale BLE data","noTime":"No BLE timestamp","error":"Scale reports an error","calibration":"Calibration needed","low":"Low gas","capacity":"Cylinder capacity","mode":"Usage mode","calibrationTitle":"Needs calibration","errorTitle":"Error status","lowTitle":"Low gas","yes":"Yes","no":"No","unavailable":"Unavailable","loading":"Loading history…","empty":"No recorded changes","range":"History period","recorder":"History comes from Home Assistant Recorder. This card is read-only.","readOnly":"Read only","hours":"hours","min":"min","hour":"hr","days":"days","ago":"ago","now":"just now","timeMissing":"No timestamp","unit":"kg"}};
-const CSS="\n:host{display:block;color:var(--primary-text-color);font-family:var(--primary-font-family,Roboto,sans-serif)}\n*{box-sizing:border-box}ha-card{padding:18px;overflow:hidden;background:var(--ha-card-background,var(--card-background-color))}\n.top{display:flex;justify-content:space-between;gap:10px;align-items:center;margin-bottom:18px}\n.brand{display:flex;align-items:center;gap:10px}.logo{display:grid;place-items:center;width:43px;height:43px;border-radius:13px;background:linear-gradient(140deg,#26b4ff,#065bba);color:#fff}\n.logo ha-icon{--mdc-icon-size:25px}h2{margin:0;font-size:18px;font-weight:750;letter-spacing:-.3px}\n.muted,.small{font-size:11px;color:var(--secondary-text-color);line-height:1.5}.status{font-size:11px;border:1px solid var(--divider-color);border-radius:16px;padding:6px 9px;white-space:nowrap;display:flex;gap:7px;align-items:center}\n.status:before{content:\"\";height:8px;width:8px;border-radius:50%;background:var(--success-color,#2ed39c)}\n.status.warn:before{background:var(--warning-color,#ffac35)}.status.bad:before{background:var(--error-color,#ef6363)}\n.hero{display:grid;grid-template-columns:120px minmax(0,1fr);gap:15px;align-items:center;padding:2px 0 17px} .hero-details{min-width:0}\n.bottle{width:104px;height:161px;margin:auto;display:flex;flex-direction:column;align-items:center}\n.handle{width:54px;height:20px;border:6px solid var(--primary-text-color);opacity:.92;border-bottom:0;border-radius:12px 12px 0 0}\n.neck{height:8px;width:82px;border:5px solid var(--primary-text-color);border-bottom:0;opacity:.92}\n.body{position:relative;width:103px;height:132px;border:6px solid var(--primary-text-color);border-radius:18px 18px 12px 12px;overflow:hidden;background:rgba(55,141,213,.09)}\n.fill{position:absolute;bottom:0;left:0;right:0;background:linear-gradient(150deg,#39bdff,#0876de);transition:height .35s}\n.overlay{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;color:white;text-shadow:0 1px 3px #18314a;font-weight:800}\n.overlay strong{font-size:23px}.overlay ha-icon{--mdc-icon-size:30px}\n.big{font-weight:800;font-size:37px;letter-spacing:-1px;margin:5px 0;line-height:1.2}\n.label{font-size:12px;font-weight:650;color:var(--secondary-text-color)}\n.hero-meta{display:flex;align-items:center;flex-wrap:wrap;gap:7px 14px;margin-top:10px}\n.hero-meta-item{display:inline-flex;align-items:center;gap:5px;color:var(--secondary-text-color);font-size:12px;white-space:nowrap;font-variant-numeric:tabular-nums}\n.hero-meta-item ha-icon{--mdc-icon-size:18px;color:var(--secondary-text-color)}\n.hero-meta-item strong{font-size:13px;font-weight:700;color:var(--primary-text-color)}\n.times{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px;margin:0 0 12px}\n.time{border:1px solid var(--divider-color);border-radius:12px;padding:11px;min-width:0}\n.time strong{display:block;margin:7px 0 4px;font-size:13px;overflow-wrap:anywhere}\n.hint{display:flex;gap:8px;padding:0 0 12px;color:var(--secondary-text-color);font-size:11px;line-height:1.5}\n.hint ha-icon{--mdc-icon-size:17px;flex-shrink:0;color:var(--info-color,#40a7ea)}\n.alert{font-size:12px;border-left:3px solid var(--warning-color,#ffac35);background:var(--secondary-background-color,rgba(130,130,130,.08));padding:10px;border-radius:7px;margin:9px 0}\n.section{border-top:1px solid var(--divider-color)}button{cursor:pointer;color:inherit;font:inherit}\n.toggle{border:0;background:none;text-align:left;display:flex;justify-content:space-between;align-items:center;width:100%;padding:14px 0;font-size:14px;font-weight:700}\n.toggle ha-icon{--mdc-icon-size:20px}.panel{padding-bottom:15px}.diag-panel{padding-top:2px}\n.tabs{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:10px}.tab,.reload{border:1px solid var(--divider-color);border-radius:9px;background:transparent;padding:7px 10px;font-size:12px}\n.tab[aria-pressed=\"true\"]{border-color:var(--primary-color,#168be1);color:var(--primary-color,#168be1)}\n.reload{margin-left:auto}.chart{width:100%;height:125px;display:block}\n.range{display:flex;justify-content:space-between;color:var(--secondary-text-color);font-size:11px;margin-bottom:9px}\n.events{max-height:260px;overflow-y:auto}.event{display:flex;justify-content:space-between;gap:10px;align-items:center;border-top:1px solid var(--divider-color);padding:9px 0;font-size:12px}\n.event time{white-space:nowrap;font-size:11px;color:var(--secondary-text-color)}\n.grid{display:grid;grid-template-columns:1fr 1fr;gap:8px}.diag{padding:11px;border:1px solid var(--divider-color);border-radius:11px}.diag strong{display:block;font-size:14px;margin-top:6px}\n.empty{padding:15px;color:var(--secondary-text-color);font-size:12px}footer{display:flex;justify-content:space-between;color:var(--secondary-text-color);font-size:10px;border-top:1px solid var(--divider-color);padding-top:10px;margin-top:8px}\n@media(max-width:410px){ha-card{padding:13px}.top{align-items:flex-start}.status{font-size:10px}.hero{grid-template-columns:100px minmax(0,1fr);gap:8px}.bottle{transform:scale(.88);transform-origin:center}.big{font-size:30px}.hero-meta{gap:7px 12px}.hero-meta-item{font-size:11px}.time{padding:9px}}\n";
+const CSS="\n:host{display:block;color:var(--primary-text-color);font-family:var(--primary-font-family,Roboto,sans-serif)}\n*{box-sizing:border-box}ha-card{padding:18px;overflow:hidden;background:var(--ha-card-background,var(--card-background-color))}\n.top{display:flex;justify-content:space-between;gap:10px;align-items:center;margin-bottom:18px}\n.brand{display:flex;align-items:center;gap:10px}.logo{display:grid;place-items:center;width:43px;height:43px;border-radius:13px;background:linear-gradient(140deg,#26b4ff,#065bba);color:#fff}\n.logo ha-icon{--mdc-icon-size:25px}h2{margin:0;font-size:18px;font-weight:750;letter-spacing:-.3px}\n.muted,.small{font-size:11px;color:var(--secondary-text-color);line-height:1.5}.status{font-size:11px;border:1px solid var(--divider-color);border-radius:16px;padding:6px 9px;white-space:nowrap;display:flex;gap:7px;align-items:center}\n.status:before{content:\"\";height:8px;width:8px;border-radius:50%;background:var(--success-color,#2ed39c)}\n.status.warn:before{background:var(--warning-color,#ffac35)}.status.bad:before{background:var(--error-color,#ef6363)}\n.hero{display:grid;grid-template-columns:120px minmax(0,1fr);gap:15px;align-items:center;padding:2px 0 17px} .hero-details{min-width:0}\n.bottle{width:104px;height:161px;margin:auto;display:flex;flex-direction:column;align-items:center}\n.handle{width:54px;height:20px;border:6px solid var(--primary-text-color);opacity:.92;border-bottom:0;border-radius:12px 12px 0 0}\n.neck{height:8px;width:82px;border:5px solid var(--primary-text-color);border-bottom:0;opacity:.92}\n.body{position:relative;width:103px;height:132px;border:6px solid var(--primary-text-color);border-radius:18px 18px 12px 12px;overflow:hidden;background:rgba(55,141,213,.09)}\n.fill{position:absolute;bottom:0;left:0;right:0;background:linear-gradient(150deg,#39bdff,#0876de);transition:height .35s}\n.overlay{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;color:white;text-shadow:0 1px 3px #18314a;font-weight:800}\n.overlay strong{font-size:23px}.overlay ha-icon{--mdc-icon-size:30px}\n.big{font-weight:800;font-size:37px;letter-spacing:-1px;margin:5px 0;line-height:1.2}\n.label{font-size:12px;font-weight:650;color:var(--secondary-text-color)}\n.hero-meta{display:flex;align-items:center;flex-wrap:wrap;gap:7px 14px;margin-top:10px}\n.hero-meta-item{display:inline-flex;align-items:center;gap:5px;color:var(--secondary-text-color);font-size:12px;white-space:nowrap;font-variant-numeric:tabular-nums}\n.hero-meta-item ha-icon{--mdc-icon-size:18px;color:var(--secondary-text-color)}\n.hero-meta-item.good ha-icon{color:var(--success-color,#27b981)}\n.hero-meta-item.warn ha-icon{color:var(--warning-color,#f4ad38)}\n.hero-meta-item.bad ha-icon{color:var(--error-color,#ee6262)}\n.hero-meta-item strong{font-size:13px;font-weight:700;color:var(--primary-text-color)}\n.times{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px;margin:0 0 12px}\n.time{border:1px solid var(--divider-color);border-radius:12px;padding:11px;min-width:0}\n.time strong{display:block;margin:7px 0 4px;font-size:13px;overflow-wrap:anywhere}\n.hint{display:flex;gap:8px;padding:0 0 12px;color:var(--secondary-text-color);font-size:11px;line-height:1.5}\n.hint ha-icon{--mdc-icon-size:17px;flex-shrink:0;color:var(--info-color,#40a7ea)}\n.alert{font-size:12px;border-left:3px solid var(--warning-color,#ffac35);background:var(--secondary-background-color,rgba(130,130,130,.08));padding:10px;border-radius:7px;margin:9px 0}\n.section{border-top:1px solid var(--divider-color)}button{cursor:pointer;color:inherit;font:inherit}\n.toggle{border:0;background:none;text-align:left;display:flex;justify-content:space-between;align-items:center;width:100%;padding:14px 0;font-size:14px;font-weight:700}\n.toggle ha-icon{--mdc-icon-size:20px}.panel{padding-bottom:15px}.diag-panel{padding-top:2px}\n.tabs{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:10px}.tab,.reload{border:1px solid var(--divider-color);border-radius:9px;background:transparent;padding:7px 10px;font-size:12px}\n.tab[aria-pressed=\"true\"]{border-color:var(--primary-color,#168be1);color:var(--primary-color,#168be1)}\n.reload{margin-left:auto}.chart{width:100%;height:125px;display:block}\n.range{display:flex;justify-content:space-between;color:var(--secondary-text-color);font-size:11px;margin-bottom:9px}\n.events{max-height:260px;overflow-y:auto}.event{display:flex;justify-content:space-between;gap:10px;align-items:center;border-top:1px solid var(--divider-color);padding:9px 0;font-size:12px}\n.event time{white-space:nowrap;font-size:11px;color:var(--secondary-text-color)}\n.grid{display:grid;grid-template-columns:1fr 1fr;gap:8px}.diag{padding:11px;border:1px solid var(--divider-color);border-radius:11px}.diag strong{display:block;font-size:14px;margin-top:6px}\n.empty{padding:15px;color:var(--secondary-text-color);font-size:12px}footer{display:flex;justify-content:space-between;color:var(--secondary-text-color);font-size:10px;border-top:1px solid var(--divider-color);padding-top:10px;margin-top:8px}\n@media(max-width:410px){ha-card{padding:13px}.top{align-items:flex-start}.status{font-size:10px}.hero{grid-template-columns:100px minmax(0,1fr);gap:8px}.bottle{transform:scale(.88);transform-origin:center}.big{font-size:30px}.hero-meta{gap:7px 12px}.hero-meta-item{font-size:11px}.time{padding:9px}}\n";
 class Senso4sBasicCard extends HTMLElement {
   constructor(){
     super();
     this.attachShadow({mode:"open"});
     this._config={title:"Senso4s Basic",entity:"",language:"auto",history_hours:168};
     this._historyOpen=false;this._diagOpen=false;this._view="gas_remaining";
-    this._history=[];this._events=[];this._loaded=false;this._loading=false;this._error="";
-    this._generation=0;this._scheduled=false;this._observed=new Map();this._live=[];
+    this._history=[];this._loaded=false;this._loading=false;this._error="";
+    this._generation=0;this._scheduled=false;
   }
   static getStubConfig(){return {};}
   getCardSize(){return 6;}
@@ -22,13 +22,12 @@ class Senso4sBasicCard extends HTMLElement {
     this._config={title:"Senso4s Basic",entity:"",language:"auto",history_hours:168,...config};
     this._config.history_hours=Math.max(1,Math.min(720,Number(this._config.history_hours)||168));
     if(!["auto","sv","en"].includes(this._config.language))this._config.language="auto";
-    if(JSON.stringify(this._config)!==previous){this._loaded=false;this._loading=false;this._history=[];this._events=[];this._generation++;}
+    if(JSON.stringify(this._config)!==previous){this._loaded=false;this._loading=false;this._history=[];this._generation++;}
     this._schedule();
   }
   set hass(hass){
     if(!hass?.states)return;
     this._hass=hass;
-    this._observe();
     this._schedule();
   }
   get hass(){return this._hass;}
@@ -65,22 +64,9 @@ class Senso4sBasicCard extends HTMLElement {
     return this._lang()==="sv"?`${num} ${this._t(unit)} sedan`:`${num} ${this._t(unit)} ago`;
   }
   _schedule(){if(this._scheduled)return;this._scheduled=true;Promise.resolve().then(()=>{this._scheduled=false;this._render();});}
-  _observe(){
-    const keys=["gas_remaining","gas_level","battery","rssi"];
-    for(const key of keys){
-      const entity=this._state(key);if(!entity)continue;
-      const id=entity.entity_id;
-      const old=this._observed.get(id);
-      if(old&&old.state!==entity.state){
-        const ev={key,at:entity.last_changed||new Date().toISOString(),old:old.state,value:entity.state,id:`${id}|${entity.last_changed}|${entity.state}`};
-        this._live.unshift(ev);this._live=this._live.slice(0,45);
-      }
-      this._observed.set(id,{state:entity.state});
-    }
-  }
   async _loadHistory(){
     if(!this._hass?.callApi||this._loading||this._loaded)return;
-    const ids=["gas_remaining","gas_level","battery","rssi"].map(x=>this._id(x)).filter(id=>id&&this._hass.states[id]);
+    const ids=["gas_remaining","battery","rssi"].map(x=>this._id(x)).filter(id=>id&&this._hass.states[id]);
     if(!ids.length){this._loaded=true;return;}
     const token=++this._generation;this._loading=true;this._error="";this._schedule();
     const end=new Date().toISOString();
@@ -92,21 +78,10 @@ class Senso4sBasicCard extends HTMLElement {
       const results=await this._hass.callApi("GET",path);
       if(token!==this._generation)return;
       if(!Array.isArray(results))throw Error("Unexpected response");
-      const map=[];const events=[];
-      for(let j=0;j<results.length;j++){
-        const rows=results[j];if(!Array.isArray(rows)||!rows.length)continue;
-        const entity=rows.find(r=>r?.entity_id)?.entity_id||ids[j];const key=entity?.split("_").slice(-2).join("_");
-        let prev=rows[0]?.state;
-        for(let k=0;k<rows.length;k++){
-          const r=rows[k];if(!r)continue;
-          const time=r.last_changed||r.last_updated||r.lu;
-          const n=Number(r.state);
-          if(entity===this._id(this._view)&&Number.isFinite(n)&&time)map.push({t:new Date(time).getTime(),v:n});
-          if(k>0&&r.state!==prev){events.push({id:`${entity}|${time}|${r.state}`,key:entity===this._id("gas_remaining")?"gas_remaining":entity===this._id("gas_level")?"gas_level":entity===this._id("battery")?"battery":"rssi",at:time,old:prev,value:r.state});}
-          prev=r.state;
-        }
-      }
-      this._history=results;this._events=events;this._loaded=true;
+      // Read only the Recorder samples required for the three graphs.
+      // Do not record transient RSSI changes in a duplicate event list.
+      this._history=results.filter(rows=>Array.isArray(rows)&&rows.length>0);
+      this._loaded=true;
     }catch(e){if(token===this._generation){this._error=String(e?.message||e);this._loaded=true;}}
     finally{if(token===this._generation){this._loading=false;this._schedule();}}
   }
@@ -124,12 +99,6 @@ class Senso4sBasicCard extends HTMLElement {
     const path=data.map((p,i)=>i===0?`M${x(p.t).toFixed(1)} ${y(p.v).toFixed(1)}`:`H${x(p.t).toFixed(1)} V${y(p.v).toFixed(1)}`).join(" ");
     return `<div class="range"><span>${this._config.history_hours} ${this._esc(this._t("hours"))}</span><span>${min.toFixed(2)}–${max.toFixed(2)} ${this._view==="gas_remaining"?"kg":this._view==="rssi"?"dBm":"%"}</span></div><svg class="chart" viewBox="0 0 700 140" role="img"><line x1="10" y1="130" x2="690" y2="130" stroke="var(--divider-color)"/><path d="${path}" fill="none" stroke="var(--info-color,#239ce5)" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/></svg>`;
   }
-  _eventsHtml(){
-    const items=[...this._events,...this._live];const found=new Set();
-    const unique=items.filter(e=>{if(found.has(e.id))return false;found.add(e.id);return true;}).sort((a,b)=>new Date(b.at)-new Date(a.at)).slice(0,25);
-    if(!unique.length)return `<div class="empty">${this._esc(this._t("empty"))}</div>`;
-    return `<div class="events">${unique.map(e=>`<div class="event"><div><strong>${this._esc(this._t(e.key==="gas_remaining"?"weight":e.key==="gas_level"?"level":e.key==="battery"?"battery":"signal"))}</strong><div class="small">${this._esc(e.old)} → ${this._esc(e.value)}</div></div><time>${this._date(e.at)}</time></div>`).join("")}</div>`;
-  }
   _render(){
     if(!this._hass)return;
     const t=k=>this._esc(this._t(k));
@@ -145,6 +114,10 @@ class Senso4sBasicCard extends HTMLElement {
     else if(cal)status=["calibration","warn"];
     else if(Number.isFinite(age)&&age>1800000)status=["stale","warn"];
     else if(!Number.isFinite(age))status=["noTime","warn"];
+    // These color bands are UI guidance, not calibrated signal reliability.
+    const battery=this._number("battery"),rssi=this._number("rssi");
+    const batterySeverity=battery===null?"neutral":battery<10?"bad":battery<20?"warn":"good";
+    const signalSeverity=rssi===null?"neutral":rssi<-85?"bad":rssi<-70?"warn":"good";
     const openHistory=this._historyOpen,openDiag=this._diagOpen;
     this.shadowRoot.innerHTML=`
 <style>${CSS}</style>
@@ -155,11 +128,11 @@ class Senso4sBasicCard extends HTMLElement {
  <div class="hero"><div class="bottle"><div class="handle"></div><div class="neck"></div><div class="body"><div class="fill" style="height:${filled}%"></div><div class="overlay"><ha-icon icon="mdi:fire"></ha-icon><strong>${level===null?"—":Math.round(level)+"%"}</strong></div></div></div>
  <div class="hero-details"><div class="label">${t("weight")}</div><div class="big">${this._display("gas_remaining",2,"kg")}</div>
  <div class="hero-meta" aria-label="${t("battery")}, ${t("signal")}">
- <span class="hero-meta-item" title="${t("battery")}"><ha-icon icon="mdi:battery"></ha-icon><strong>${this._display("battery",0,"%")}</strong></span>
- <span class="hero-meta-item" title="${t("signal")}"><ha-icon icon="mdi:bluetooth"></ha-icon><strong>${this._display("rssi",0,"dBm")}</strong></span>
+ <span class="hero-meta-item ${batterySeverity}" title="${t("battery")}"><ha-icon icon="mdi:battery"></ha-icon><strong>${this._display("battery",0,"%")}</strong></span>
+ <span class="hero-meta-item ${signalSeverity}" title="${t("signal")}"><ha-icon icon="mdi:bluetooth"></ha-icon><strong>${this._display("rssi",0,"dBm")}</strong></span>
  </div></div></div>
  <section class="section"><button class="toggle" data-toggle="history" aria-expanded="${openHistory}">${t("history")}<ha-icon icon="mdi:chevron-${openHistory?"up":"down"}"></ha-icon></button>
- ${openHistory?`<div class="panel"><div class="tabs">${[["gas_remaining","weight"],["gas_level","level"],["battery","battery"],["rssi","signal"]].map(([key,label])=>`<button class="tab" data-view="${key}" aria-pressed="${this._view===key}">${t(label)}</button>`).join("")}<button class="reload" data-refresh="true" title="${t("reload")}">↻</button></div>${this._loading?`<div class="empty">${t("loading")}</div>`:this._error?`<div class="alert">${this._esc(this._error)}</div>`:this._chart()}<div class="small">${t("recorder")}</div><div style="font-weight:700;margin:16px 0 8px">${t("recent")}</div>${this._eventsHtml()}</div>`:""}
+ ${openHistory?`<div class="panel"><div class="tabs">${[["gas_remaining","weight"],["battery","battery"],["rssi","signal"]].map(([key,label])=>`<button class="tab" data-view="${key}" aria-pressed="${this._view===key}">${t(label)}</button>`).join("")}<button class="reload" data-refresh="true" title="${t("reload")}">↻</button></div>${this._loading?`<div class="empty">${t("loading")}</div>`:this._error?`<div class="alert">${this._esc(this._error)}</div>`:this._chart()}<div class="small">${t("recorder")}</div></div>`:""}
  </section>
  <section class="section"><button class="toggle" data-toggle="diag" aria-expanded="${openDiag}">${t("diagnostics")}<ha-icon icon="mdi:chevron-${openDiag?"up":"down"}"></ha-icon></button>
  ${openDiag?`<div class="panel diag-panel">
