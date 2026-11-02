@@ -98,8 +98,8 @@ test('reads history and includes discrete mass changes', async () => {
   const windowHours = (end - start) / 3600000;
   assert.ok(windowHours >= 167.9 && windowHours <= 168.1, 'complete 7-day history window');
   assert.match(card._chart(), /stroke-width="3"/);
-  assert.match(card._eventsHtml(), /9.7/);
-  assert.match(card._eventsHtml(), /9.5/);
+  assert.match(card._chart(), / H[0-9.]+ V[0-9.]+/);
+  assert.equal(card.shadowRoot.innerHTML.includes('Senaste ändringar'), false);
 });
 
 test('weight note is tucked under diagnostics and footer remains concise', async () => {
@@ -155,4 +155,62 @@ test('English diagnostic timestamps are translated', async () => {
   await Promise.resolve();
   assert.match(card.shadowRoot.innerHTML, /Last processed BLE data/);
   assert.match(card.shadowRoot.innerHTML, /Last weight change in HA/);
+});
+
+test('history only shows mass, battery, RSSI charts without a change log', async () => {
+  const card = new Card();
+  card.setConfig({ language: 'sv' });
+  let historyPath = '';
+  card.hass = { states: makeStates(), language: 'sv', callApi: async (_method, path) => {
+    historyPath = path;
+    return [[
+      { entity_id: 'sensor.' + base + '_gas_remaining', state: '9.7', last_changed: oldTime },
+      { entity_id: 'sensor.' + base + '_gas_remaining', state: '9.5', last_changed: newTime },
+    ]];
+  } };
+  card._historyOpen = true;
+  await card._loadHistory();
+  await Promise.resolve();
+  const html = card.shadowRoot.innerHTML;
+  assert.equal(html.includes('data-view="gas_level"'), false);
+  for (const key of ['gas_remaining', 'battery', 'rssi']) assert.ok(html.includes('data-view="' + key + '"'));
+  assert.equal(html.includes('Senaste ändringar'), false);
+  assert.equal(historyPath.includes('senso4s_gas_sensor_5d32_gas_level'), false);
+  assert.equal(typeof card._eventsHtml, 'undefined');
+});
+
+test('battery indicator colors follow 20 percent and 10 percent boundaries', async () => {
+  for (const [level, expected] of [[100,'good'],[20,'good'],[19,'warn'],[10,'warn'],[9,'bad']]) {
+    const states = makeStates();
+    states['sensor.' + base + '_battery'] = entity('battery', level, { last_seen: newTime });
+    const card = new Card();
+    card.setConfig({ language: 'sv' });
+    card.hass = { states, language: 'sv' };
+    await Promise.resolve();
+    assert.ok(card.shadowRoot.innerHTML.includes('class="hero-meta-item ' + expected + '" title="Batteri"'), String(level));
+  }
+});
+
+test('RSSI indicator colors are a noncalibrated signal-strength heuristic', async () => {
+  for (const [rssi, expected] of [[-49,'good'],[-70,'good'],[-71,'warn'],[-85,'warn'],[-86,'bad']]) {
+    const states = makeStates();
+    states['sensor.' + base + '_signal_strength'] = entity('signal_strength', rssi);
+    const card = new Card();
+    card.setConfig({ language: 'sv' });
+    card.hass = { states, language: 'sv' };
+    await Promise.resolve();
+    assert.ok(card.shadowRoot.innerHTML.includes('class="hero-meta-item ' + expected + '" title="Bluetooth-signal"'), String(rssi));
+  }
+});
+
+test('missing battery and RSSI are neutral, not false green', async () => {
+  const states = makeStates();
+  delete states['sensor.' + base + '_battery'];
+  delete states['sensor.' + base + '_signal_strength'];
+  const card = new Card();
+  card.setConfig({ language: 'sv' });
+  card.hass = { states, language: 'sv' };
+  await Promise.resolve();
+  assert.ok(card.shadowRoot.innerHTML.includes('class="hero-meta-item neutral" title="Batteri"'));
+  assert.ok(card.shadowRoot.innerHTML.includes('class="hero-meta-item neutral" title="Bluetooth-signal"'));
 });
