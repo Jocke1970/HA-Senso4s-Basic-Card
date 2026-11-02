@@ -1,0 +1,1 @@
+# HA-Senso4-Basic-Card
