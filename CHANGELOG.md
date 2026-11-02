@@ -1,5 +1,20 @@
 # Changelog
 
+## 0.1.0 — 2026-11-03 (stable)
+
+First stable release of the standalone Senso4s Basic Lovelace card, based on the visually approved `0.1.0b7` beta.
+
+- Compact cylinder overview showing gas remaining, percentage, estimated empty date and color-coded battery/Bluetooth status
+- Symmetrical 2×2 diagnostics grid with bold centered labels and dynamic mode/error/calibration/low-gas icons
+- Expandable Recorder graphs for gas remaining, battery and RSSI
+- Swedish and English localization with matching embedded translation keys
+- Auto-discovery for one scale, explicit selection when multiple scales are present
+- `Refill tank`, `Recalibrate Scale` and `Settings Only` remain disabled future-action placeholders
+- Read-only frontend with no Wecamp dependency and no backend control commands
+
+**Validation:** User-verified Home Assistant layout, JavaScript syntax and automated/simulated frontend test coverage including translation parity. Stable assets are promoted through `dev → beta → main`.
+
+
 ## 0.1.0b7 — 2026-11-03
 
 - Center each diagnostic tile's title and status icon horizontally
