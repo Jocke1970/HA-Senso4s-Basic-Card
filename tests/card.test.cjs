@@ -400,3 +400,24 @@ test('diagnostic panel has a symmetric two-by-two grid with icons below labels',
   assert.ok(html.includes('.diag .small{display:flex;align-items:center;justify-content:center'));
   assert.ok(html.includes('font-size:13px;font-weight:700;text-align:center'));
 });
+
+test('stable release includes matching Swedish and English translation keys', () => {
+  const match = js.match(/const L=(\{[\s\S]*?\});\s*const CSS=/);
+  assert.ok(match, 'embedded Swedish/English translation object exists');
+  const translations = JSON.parse(match[1]);
+  const sv = Object.keys(translations.sv).sort();
+  const en = Object.keys(translations.en).sort();
+  assert.equal(sv.length, 53);
+  assert.deepEqual(sv, en);
+  for (const key of sv) {
+    assert.ok(translations.sv[key].trim(), 'Swedish: ' + key);
+    assert.ok(translations.en[key].trim(), 'English: ' + key);
+  }
+  for (const key of ['mode', 'errorTitle', 'calibrationTitle', 'lowTitle',
+                     'estimatedEmpty', 'refillTank', 'recalibrateScale',
+                     'settingsOnly', 'comingLater', 'modeHeating']) {
+    assert.ok(translations.sv[key], key + ' Swedish');
+    assert.ok(translations.en[key], key + ' English');
+  }
+  assert.match(js, /VERSION="0\.1\.0"/);
+});
