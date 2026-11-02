@@ -304,3 +304,62 @@ test('Swedish placeholders are localized, disabled and preserve estimated empty'
   assert.match(card.shadowRoot.innerHTML, /Endast inställningar/);
   assert.equal(card.shadowRoot.innerHTML.split('class="pending-btn" disabled').length - 1, 3);
 });
+
+test('usage modes render their matching colored icons and accessible localized titles', async () => {
+  const modes = [
+    ['Heating','mdi:radiator','warn','Uppvärmning'],
+    ['BBQ','mdi:grill','warn','Grillning'],
+    ['Camping','mdi:tent','good','Camping'],
+    ['Caravanning','mdi:caravan','info','Husvagn'],
+    ['Household','mdi:home','info','Hushåll'],
+  ];
+  for (const [mode,icon,tone,title] of modes) {
+    const states=makeStates();
+    states['sensor.'+base+'_usage_mode']=entity('usage_mode',mode);
+    const card=new Card();card.setConfig({language:'sv'});card.hass={states,language:'sv'};
+    await Promise.resolve();card._diagOpen=true;card._schedule();await Promise.resolve();
+    const html=card.shadowRoot.innerHTML;
+    assert.ok(html.includes('class="diag-visual '+tone+'" role="img" aria-label="'+title+'"'),mode);
+    assert.ok(html.includes('icon="'+icon+'"'),mode);
+    assert.equal(html.includes('<strong>'+mode+'</strong>'),false,mode);
+  }
+});
+
+test('error, calibration and low-gas fields use icons with severity colors', async () => {
+  const fields=[
+    ['error','Felstatus','mdi:alert-circle','bad'],
+    ['needs_calibration','Behöver kalibrering','mdi:scale-balance','warn'],
+    ['low_gas','Låg gasol','mdi:alert-circle','bad'],
+  ];
+  for (const [key,label,onIcon,onTone] of fields) {
+    for(const [state,icon,tone,access] of [
+      ['off','mdi:check-circle','good','Nej'],
+      ['on',onIcon,onTone,'Ja'],
+      ['unavailable','mdi:help-circle-outline','neutral','Ej tillgängligt']
+    ]){
+      const states=makeStates();
+      states['binary_sensor.'+base+'_'+key]={entity_id:'binary_sensor.'+base+'_'+key,state};
+      const card=new Card();card.setConfig({language:'sv'});card.hass={states,language:'sv'};
+      await Promise.resolve();card._diagOpen=true;card._schedule();await Promise.resolve();
+      const html=card.shadowRoot.innerHTML;
+      const start=html.indexOf('<span class="small">'+label+'</span>');
+      const part=html.slice(start,start+340);
+      assert.ok(start>=0,key);
+      assert.ok(part.includes('class="diag-visual '+tone+'"'),key+' '+state);
+      assert.ok(part.includes('icon="'+icon+'"'),key+' '+state);
+      assert.ok(part.includes('aria-label="'+access+'"'),key+' '+state);
+      assert.equal(part.includes('<strong>'+access+'</strong>'),false,key+' '+state);
+    }
+  }
+});
+
+test('unrecognized usage mode stays neutral without inventing a category', async () => {
+  for(const state of ['unknown','Unknown future mode']) {
+    const states=makeStates();states['sensor.'+base+'_usage_mode']=entity('usage_mode',state);
+    const card=new Card();card.setConfig({language:'en'});card.hass={states,language:'en'};
+    await Promise.resolve();card._diagOpen=true;card._schedule();await Promise.resolve();
+    const html=card.shadowRoot.innerHTML;
+    assert.match(html,/class="diag-visual neutral" role="img" aria-label="Unknown usage mode"/);
+    assert.match(html,/icon="mdi:help-circle-outline"/);
+  }
+});
