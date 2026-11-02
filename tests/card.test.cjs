@@ -44,15 +44,14 @@ test('registers standalone custom card with no service calls', () => {
   assert.equal(/wecamp/i.test(js), false);
 });
 
-test('auto-detects single Senso4s scale and distinguishes BLE from weight timestamps', async () => {
+test('auto-detects single Senso4s scale and shows compact overview', async () => {
   const card = new Card();
   card.setConfig({ language: 'sv' });
   card.hass = { states: makeStates(), language: 'sv' };
   await Promise.resolve();
   assert.match(card.shadowRoot.innerHTML, /9,50 kg/);
   assert.match(card.shadowRoot.innerHTML, /95%/);
-  assert.match(card.shadowRoot.innerHTML, /Senast behandlad BLE-data/);
-  assert.match(card.shadowRoot.innerHTML, /Senast ändrad vikt i HA/);
+  assert.equal(card.shadowRoot.innerHTML.includes('Senast behandlad BLE-data'), false);
 });
 
 test('English UI and explicit scale selection', async () => {
@@ -103,10 +102,14 @@ test('reads history and includes discrete mass changes', async () => {
   assert.match(card._eventsHtml(), /9.5/);
 });
 
-test('weight note appears only once and footer remains concise', async () => {
+test('weight note is tucked under diagnostics and footer remains concise', async () => {
   const card = new Card();
   card.setConfig({ language: 'sv' });
   card.hass = { states: makeStates(), language: 'sv' };
+  await Promise.resolve();
+  assert.equal(card.shadowRoot.innerHTML.includes('Senaste BLE-kontakt är inte samma sak'), false);
+  card._diagOpen = true;
+  card._schedule();
   await Promise.resolve();
   assert.equal(card.shadowRoot.innerHTML.split('Senaste BLE-kontakt är inte samma sak').length - 1, 1);
   assert.match(card.shadowRoot.innerHTML, /Endast läsning/);
