@@ -1,5 +1,15 @@
 # Changelog
 
+## 0.1.0b7 — 2026-11-03
+
+- Center each diagnostic tile's title and status icon horizontally
+- Increase title font size and weight for quicker scanning
+- Vertically align label/icon groups within four equal-height tiles in a 2×2 grid
+- Preserve all existing frontend behavior; no backend changes or action handlers
+
+**Validation:** JavaScript source syntax and 22 simulated frontend tests passed. Final Home Assistant visual acceptance required before promotion to `main`.
+
+
 ## 0.1.0b6 — 2026-11-02
 
 - Remove the cylinder-capacity tile from Diagnostics; no backend entities are changed
