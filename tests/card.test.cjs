@@ -140,7 +140,8 @@ test('measurement timestamps and BLE explanation appear only under diagnostics',
   const html = card.shadowRoot.innerHTML;
   assert.match(html, /Senast behandlad BLE-data/);
   assert.match(html, /Senast ändrad vikt i HA/);
-  assert.match(html, /Flaskkapacitet/);
+  assert.match(html, /Användningsläge/);
+  assert.equal(html.includes('Flaskkapacitet'), false);
   assert.equal(html.split('Senaste BLE-kontakt är inte samma sak').length - 1, 1);
   assert.equal(html.split('<div class="times">').length - 1, 1);
 });
@@ -362,4 +363,37 @@ test('unrecognized usage mode stays neutral without inventing a category', async
     assert.match(html,/class="diag-visual neutral" role="img" aria-label="Unknown usage mode"/);
     assert.match(html,/icon="mdi:help-circle-outline"/);
   }
+});
+
+test('diagnostic panel has a symmetric two-by-two grid with icons below labels', async () => {
+  const states = makeStates();
+  states['sensor.' + base + '_usage_mode'] = entity('usage_mode', 'Heating');
+  for (const key of ['error', 'needs_calibration', 'low_gas']) {
+    states['binary_sensor.' + base + '_' + key] = {
+      entity_id: 'binary_sensor.' + base + '_' + key,
+      state: 'off'
+    };
+  }
+  const card = new Card();
+  card.setConfig({ language: 'sv' });
+  card.hass = { states, language: 'sv' };
+  await Promise.resolve();
+  card._diagOpen = true;
+  card._schedule();
+  await Promise.resolve();
+  const html = card.shadowRoot.innerHTML;
+  const grid = html.slice(html.indexOf('<div class="grid">'), html.indexOf('<div class="pending-actions"', html.indexOf('<div class="grid">')));
+  assert.equal(grid.split('<div class="diag">').length - 1, 4);
+  assert.equal(grid.split('class="diag-visual').length - 1, 4);
+  assert.equal(grid.includes('Flaskkapacitet'), false);
+  assert.equal(grid.includes('10,00 kg'), false);
+  for (const label of ['Användningsläge', 'Felstatus', 'Behöver kalibrering', 'Låg gasol']) {
+    const start = grid.indexOf('<span class="small">' + label + '</span>');
+    assert.ok(start >= 0, label);
+    const next = grid.indexOf('<div class="diag">', start);
+    const tile = grid.slice(start, next < 0 ? undefined : next);
+    assert.ok(tile.indexOf('class="diag-visual') > tile.indexOf('</span>'), label);
+  }
+  assert.ok(html.includes('grid-template-columns:repeat(2,minmax(0,1fr))'));
+  assert.ok(html.includes('flex-direction:column;align-items:flex-start'));
 });
