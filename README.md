@@ -2,9 +2,9 @@
 
 A standalone, read-only Home Assistant Lovelace card for **Senso4s Basic Bluetooth gas cylinder scales**.
 
-**Beta 0.1.0b5:** Replaces diagnostic state text with dynamic, accessible status icons and per-mode activity symbols, while retaining the compact overview, graph simplifications and disabled future-action placeholders from 0.1.0b4.
+**Beta 0.1.0b6:** A symmetric 2×2 diagnostic status grid. The cylinder capacity tile was removed, and the four dynamic icons now appear below their respective headings.
 
-> **Beta 0.1.0b5** — development version. Real Home Assistant device testing is pending. The `main` branch is not released yet.
+> **Beta 0.1.0b6** — development version. Real Home Assistant device testing is pending. The `main` branch is not released yet.
 
 ## Features
 
@@ -17,7 +17,7 @@ A standalone, read-only Home Assistant Lovelace card for **Senso4s Basic Bluetoo
 - Bluetooth icon color (approximate heuristic): green at −70 dBm or better, yellow from below −70 through −85 dBm, red below −85 dBm; no reading shows neutral
 - Disabled **Refill tank** placeholder shown only when the reported gas level is below 10%
 - Disabled **Recalibrate Scale** and **Settings Only** placeholders in the Diagnostics expander
-- Diagnostics: BLE processing and weight-change timestamps, capacity, usage-mode icon (Heating, BBQ, Camping, Caravanning, Household), and color-coded error/calibration/low-gas status icons
+- Diagnostics: BLE processing and weight-change timestamps, plus a symmetric two-column, four-tile grid (usage mode, error, calibration and low-gas), each with its icon below the heading. Cylinder capacity is omitted from the card.
 - Diagnostic status icons: green checkmark for explicitly inactive warnings, red for active error/low gas, yellow for calibration required, neutral question mark when unknown/unavailable
 - Icons include localized accessible labels/tooltips; usage-mode color indicates category, not a fault
 - Swedish and English UI, using Home Assistant's language by default
@@ -35,7 +35,7 @@ For the first Home Assistant test, use the file from the `beta` branch:
 
 1. Copy [senso4s-basic-card.js](https://github.com/Jocke1970/HA-Senso4s-Basic-Card/blob/beta/senso4s-basic-card.js) to `/config/www/senso4s-basic-card.js`.
 2. In **Settings → Dashboards → Resources**, add `/local/senso4s-basic-card.js` as a **JavaScript module**.
-3. Reload the dashboard after updating the card file.
+3. Reload the dashboard after updating the card file. If Chromium still shows an older version, open Developer Tools with **F12**, then hold or right-click Reload and select **Empty Cache and Hard Reload**.
 4. Add a **Manual** card with the following YAML:
 
 ```yaml
