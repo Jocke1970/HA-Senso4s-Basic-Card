@@ -22,7 +22,7 @@ class Senso4sBasicCard extends HTMLElement {
     this._config={title:"Senso4s Basic",entity:"",language:"auto",history_hours:168,...config};
     this._config.history_hours=Math.max(1,Math.min(720,Number(this._config.history_hours)||168));
     if(!["auto","sv","en"].includes(this._config.language))this._config.language="auto";
-    if(JSON.stringify(this._config)!==previous){this._loaded=false;this._history=[];this._events=[];this._generation++;}
+    if(JSON.stringify(this._config)!==previous){this._loaded=false;this._loading=false;this._history=[];this._events=[];this._generation++;}
     this._schedule();
   }
   set hass(hass){
@@ -158,7 +158,7 @@ class Senso4sBasicCard extends HTMLElement {
  ${openHistory?`<div class="panel"><div class="tabs">${[["gas_remaining","weight"],["gas_level","level"],["battery","battery"],["rssi","signal"]].map(([key,label])=>`<button class="tab" data-view="${key}" aria-pressed="${this._view===key}">${t(label)}</button>`).join("")}<button class="reload" data-refresh="true" title="${t("reload")}">↻</button></div>${this._loading?`<div class="empty">${t("loading")}</div>`:this._error?`<div class="alert">${this._esc(this._error)}</div>`:this._chart()}<div class="small">${t("recorder")}</div><div style="font-weight:700;margin:16px 0 8px">${t("recent")}</div>${this._eventsHtml()}</div>`:""}
  </section>
  <section class="section"><button class="toggle" data-toggle="diag" aria-expanded="${openDiag}">${t("diagnostics")}<ha-icon icon="mdi:chevron-${openDiag?"up":"down"}"></ha-icon></button>
- ${openDiag?`<div class="panel grid">${[["capacity",this._display("gas_capacity",2,"kg")],["mode",this._esc(this._val("usage_mode")||this._t("unavailable"))],["errorTitle",this._val("error")==="on"?t("yes"):t("no")],["calibrationTitle",this._val("needs_calibration")==="on"?t("yes"):t("no")],["lowTitle",this._val("low_gas")==="on"?t("yes"):t("no")]].map(([label,value])=>`<div class="diag"><span class="small">${t(label)}</span><strong>${value}</strong></div>`).join("")}</div>`:""}
+ ${openDiag?`<div class="panel grid">${[["capacity",this._display("gas_capacity",2,"kg")],["mode",this._esc(this._val("usage_mode")||this._t("unavailable"))],["errorTitle",this._val("error")===null?t("unavailable"):this._val("error")==="on"?t("yes"):t("no")],["calibrationTitle",this._val("needs_calibration")===null?t("unavailable"):this._val("needs_calibration")==="on"?t("yes"):t("no")],["lowTitle",this._val("low_gas")===null?t("unavailable"):this._val("low_gas")==="on"?t("yes"):t("no")]].map(([label,value])=>`<div class="diag"><span class="small">${t(label)}</span><strong>${value}</strong></div>`).join("")}</div>`:""}
  </section>`}
  <footer><span>Senso4s Basic · ${VERSION}</span><span>${t("recorder")}</span></footer>
 </ha-card>`;
