@@ -395,5 +395,8 @@ test('diagnostic panel has a symmetric two-by-two grid with icons below labels',
     assert.ok(tile.indexOf('class="diag-visual') > tile.indexOf('</span>'), label);
   }
   assert.ok(html.includes('grid-template-columns:repeat(2,minmax(0,1fr))'));
-  assert.ok(html.includes('flex-direction:column;align-items:flex-start'));
+  assert.ok(html.includes('flex-direction:column;align-items:center;justify-content:center'));
+  assert.ok(html.includes('min-height:104px'));
+  assert.ok(html.includes('.diag .small{display:flex;align-items:center;justify-content:center'));
+  assert.ok(html.includes('font-size:13px;font-weight:700;text-align:center'));
 });
