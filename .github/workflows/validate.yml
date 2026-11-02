@@ -1,0 +1,16 @@
+name: Validate card
+on:
+  push:
+    branches: [dev, beta, main]
+  pull_request:
+jobs:
+  syntax:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Check JavaScript syntax
+        run: node --check senso4s-basic-card.js
+      - name: Validate HACS metadata
+        run: node -e "const f=require('./hacs.json'); if(f.filename!=='senso4s-basic-card.js'||f.content_in_root!==true) process.exit(1)"
+      - name: Reject Wecamp coupling
+        run: '! grep -i "wecamp" senso4s-basic-card.js'
