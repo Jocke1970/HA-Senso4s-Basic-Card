@@ -2,9 +2,7 @@
 
 A standalone, read-only Home Assistant Lovelace card for **Senso4s Basic Bluetooth gas cylinder scales**.
 
-**Beta 0.1.0b7:** Polishes the 2×2 diagnostic grid with bolder, centered headings and centered icons, ready for final Home Assistant visual review before a stable release.
-
-> **Beta 0.1.0b7** — development version. Real Home Assistant device testing is pending. The `main` branch is not released yet.
+**Stable release: 0.1.0 (2026-11-03).** The 2×2 diagnostic grid has bold, centered headings and status icons. The card was visually approved in Home Assistant; future-action buttons remain intentionally disabled.
 
 ## Features
 
@@ -23,17 +21,17 @@ A standalone, read-only Home Assistant Lovelace card for **Senso4s Basic Bluetoo
 - Swedish and English UI, using Home Assistant's language by default
 - Supports different device addresses and multiple Senso4s scales via configurable entity
 - No dependency on the Wecamp heater, YAML packages, or third-party JS libraries
-- Read-only: the card never sends service calls or writes to the gas scale. **All three future-action buttons are visual placeholders, disabled in this beta.**
+- Read-only: the card never sends service calls or writes to the gas scale. **All three future-action buttons are disabled placeholders in 0.1.0.**
 
 ### Important: BLE freshness versus actual weighing
 
 A fresh BLE packet can repeat the previous mass; it **does not prove that the scale performed a new physical weighing**. Likewise, `last_changed` reflects when Home Assistant recorded a changed entity state, not necessarily the scale's internal weighing time.
 
-## Install the beta manually
+## Installation
 
-For the first Home Assistant test, use the file from the `beta` branch:
+Install the stable JavaScript file from `main`:
 
-1. Copy [senso4s-basic-card.js](https://github.com/Jocke1970/HA-Senso4s-Basic-Card/blob/beta/senso4s-basic-card.js) to `/config/www/senso4s-basic-card.js`.
+1. Copy [senso4s-basic-card.js](https://github.com/Jocke1970/HA-Senso4s-Basic-Card/blob/main/senso4s-basic-card.js) to `/config/www/senso4s-basic-card.js`.
 2. In **Settings → Dashboards → Resources**, add `/local/senso4s-basic-card.js` as a **JavaScript module**.
 3. Reload the dashboard after updating the card file. If Chromium still shows an older version, open Developer Tools with **F12**, then hold or right-click Reload and select **Empty Cache and Hard Reload**.
 4. Add a **Manual** card with the following YAML:
@@ -57,9 +55,13 @@ history_hours: 168
 
 The example entity is specific to one device; use your own `gas_remaining` entity ID. With only one scale, `entity` may be omitted.
 
+## Translations
+
+The card supports **Swedish** (`sv`) and **English** (`en`). Both language dictionaries are embedded in `senso4s-basic-card.js` so only one JavaScript resource needs to be installed; there are no separate language JSON files. The dictionaries have matching keys and include all labels for status icons, the estimated-empty date, diagnostics and future action buttons. With `language: auto`, the card follows Home Assistant's language setting.
+
 ## Planned actions (not operational)
 
-The three buttons are intentionally **disabled** in this beta. They are not wired to the Senso4s integration, and clicking/tapping them cannot refill, recalibrate or open settings. The refill action is hidden when the gas level is unavailable or 10% and above. We will evaluate supported backend operations and safeguards in a later beta before enabling any of them.
+The three buttons are intentionally **disabled** in release 0.1.0. They are not wired to the Senso4s integration, and clicking/tapping them cannot refill, recalibrate or open settings. The refill action is hidden when the gas level is unavailable or 10% and above. We will evaluate supported backend operations and safeguards in a later beta before enabling any of them.
 
 ## Configuration
 
@@ -75,7 +77,7 @@ When history is opened, the card uses the built-in Home Assistant history API. R
 
 ## HACS / Home Assistant Marketplace
 
-The repository includes `hacs.json` with an explicit filename and can be added as a **Dashboard** custom repository. HACS generally installs from a release or default branch; because `main` is intentionally held back until HA validation, **use the manual beta instructions above for now**. Do not change the default branch to `dev` for beta testing.
+The repository includes `hacs.json` with an explicit filename and supports installation as a **Dashboard** custom repository in HACS. The `main` branch contains the stable `0.1.0` version. The manual installation instructions above also work without HACS.
 
 ## Development and releases
 
