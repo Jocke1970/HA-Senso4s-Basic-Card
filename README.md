@@ -2,15 +2,15 @@
 
 A standalone, read-only Home Assistant Lovelace card for **Senso4s Basic Bluetooth gas cylinder scales**.
 
-**Beta 0.1.0b2:** Fixes Recorder history requests to cover the full configured period up to the current time. Also removes duplicated BLE explanations from the card.
+**Beta 0.1.0b3:** Compact overview with battery and Bluetooth readings beside the gas amount. The BLE and weight-update timestamps now live inside the Diagnostics expander; the separate summary tiles have been removed.
 
-> **Beta 0.1.0b2** — development version. Real Home Assistant device testing is pending. The `main` branch is not released yet.
+> **Beta 0.1.0b3** — development version. Real Home Assistant device testing is pending. The `main` branch is not released yet.
 
 ## Features
 
-- Gas remaining (kg), cylinder fill level (%), battery level and Bluetooth RSSI
+- Compact overview: gas amount (kg) beside the fill-level cylinder (%), plus small battery and Bluetooth/RSSI indicators
 - A visual cylinder gauge
-- Separate timestamps for **last processed BLE data** and **last Home Assistant weight change**
+- Diagnostics expander with separate timestamps for **last processed BLE data** and **last Home Assistant weight change**
 - Optional Home Assistant Recorder graphs and recent changes (weight, %, battery and signal)
 - Diagnostics: capacity, usage mode, error, calibration, low-gas flags
 - Swedish and English UI, using Home Assistant's language by default
@@ -27,7 +27,7 @@ A fresh BLE packet can repeat the previous mass; it **does not prove that the sc
 For the first Home Assistant test, use the file from the `beta` branch:
 
 1. Copy [senso4s-basic-card.js](https://github.com/Jocke1970/HA-Senso4s-Basic-Card/blob/beta/senso4s-basic-card.js) to `/config/www/senso4s-basic-card.js`.
-2. In **Settings → Dashboards → Resources**, add `/local/senso4s-basic-card.js?v=0.1.0b2` as a **JavaScript module**.
+2. In **Settings → Dashboards → Resources**, add `/local/senso4s-basic-card.js?v=0.1.0b3` as a **JavaScript module**.
 3. Hard-refresh the browser after updating the resource.
 4. Add a **Manual** card with the following YAML:
 
