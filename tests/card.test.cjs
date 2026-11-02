@@ -78,16 +78,36 @@ test('prompts for a device with multiple discovered scales', async () => {
 test('reads history and includes discrete mass changes', async () => {
   const card = new Card();
   card.setConfig({ language: 'sv' });
-  card.hass = { states: makeStates(), language: 'sv', callApi: async () => [
-    [
-      { entity_id: 'sensor.' + base + '_gas_remaining', state: '9.7', last_changed: oldTime },
-      { entity_id: 'sensor.' + base + '_gas_remaining', state: '9.5', last_changed: newTime },
-    ],
-  ] };
+  let historyPath = '';
+  card.hass = { states: makeStates(), language: 'sv', callApi: async (method, path) => {
+    assert.equal(method, 'GET');
+    historyPath = path;
+    return [
+      [
+        { entity_id: 'sensor.' + base + '_gas_remaining', state: '9.7', last_changed: oldTime },
+        { entity_id: 'sensor.' + base + '_gas_remaining', state: '9.5', last_changed: newTime },
+      ],
+    ];
+  } };
   card._historyOpen = true;
   await card._loadHistory();
   await Promise.resolve();
+  const params = new URLSearchParams(historyPath.split('?')[1]);
+  assert.ok(params.has('end_time'), 'history request must explicitly end at current time');
+  const start = new Date(decodeURIComponent(historyPath.split('/period/')[1].split('?')[0]));
+  const end = new Date(params.get('end_time'));
+  const windowHours = (end - start) / 3600000;
+  assert.ok(windowHours >= 167.9 && windowHours <= 168.1, 'complete 7-day history window');
   assert.match(card._chart(), /stroke-width="3"/);
   assert.match(card._eventsHtml(), /9.7/);
   assert.match(card._eventsHtml(), /9.5/);
+});
+
+test('weight note appears only once and footer remains concise', async () => {
+  const card = new Card();
+  card.setConfig({ language: 'sv' });
+  card.hass = { states: makeStates(), language: 'sv' };
+  await Promise.resolve();
+  assert.equal(card.shadowRoot.innerHTML.split('Senaste BLE-kontakt är inte samma sak').length - 1, 1);
+  assert.match(card.shadowRoot.innerHTML, /Endast läsning/);
 });
