@@ -1,5 +1,17 @@
 # Changelog
 
+## 0.1.0b5 — 2026-11-02
+
+- Replace raw diagnostic text for usage mode, error status, calibration-needed and low-gas with dynamic status icons
+- Match all five Senso4s modes: Heating (radiator), BBQ (grill), Camping (tent), Caravanning (caravan) and Household (home)
+- Green check mark for explicit `off` alarm/flag states; red warning for active error and low gas; yellow scale for calibration required
+- Neutral question mark on unavailable/unknown values; never treat missing flags as healthy
+- Localized Swedish/English icon titles and accessible labels
+- Keep cylinder capacity numeric and preserve all v0.1.0b4 features; no backend control actions added
+
+**Validation:** JavaScript syntax and 21 simulated frontend tests passed. Real Home Assistant UI verification remains pending. `main` unchanged.
+
+
 ## 0.1.0b4 — 2026-11-02
 
 - Show a localized `estimated_empty` date between gas weight and battery/RSSI indicators, with a neutral dash when absent
