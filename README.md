@@ -2,9 +2,9 @@
 
 A standalone, read-only Home Assistant Lovelace card for **Senso4s Basic Bluetooth gas cylinder scales**.
 
-**Beta 0.1.0b6:** A symmetric 2×2 diagnostic status grid. The cylinder capacity tile was removed, and the four dynamic icons now appear below their respective headings.
+**Beta 0.1.0b7:** Polishes the 2×2 diagnostic grid with bolder, centered headings and centered icons, ready for final Home Assistant visual review before a stable release.
 
-> **Beta 0.1.0b6** — development version. Real Home Assistant device testing is pending. The `main` branch is not released yet.
+> **Beta 0.1.0b7** — development version. Real Home Assistant device testing is pending. The `main` branch is not released yet.
 
 ## Features
 
@@ -17,7 +17,7 @@ A standalone, read-only Home Assistant Lovelace card for **Senso4s Basic Bluetoo
 - Bluetooth icon color (approximate heuristic): green at −70 dBm or better, yellow from below −70 through −85 dBm, red below −85 dBm; no reading shows neutral
 - Disabled **Refill tank** placeholder shown only when the reported gas level is below 10%
 - Disabled **Recalibrate Scale** and **Settings Only** placeholders in the Diagnostics expander
-- Diagnostics: BLE processing and weight-change timestamps, plus a symmetric two-column, four-tile grid (usage mode, error, calibration and low-gas), each with its icon below the heading. Cylinder capacity is omitted from the card.
+- Diagnostics: BLE processing and weight-change timestamps, plus a symmetric two-column, four-tile grid (usage mode, error, calibration and low-gas), each with a bold centered heading and a centered icon below it. Cylinder capacity is omitted from the card.
 - Diagnostic status icons: green checkmark for explicitly inactive warnings, red for active error/low gas, yellow for calibration required, neutral question mark when unknown/unavailable
 - Icons include localized accessible labels/tooltips; usage-mode color indicates category, not a fault
 - Swedish and English UI, using Home Assistant's language by default
