@@ -2,21 +2,26 @@
 
 A standalone, read-only Home Assistant Lovelace card for **Senso4s Basic Bluetooth gas cylinder scales**.
 
-**Beta 0.1.0b3:** Compact overview with battery and Bluetooth readings beside the gas amount. The BLE and weight-update timestamps now live inside the Diagnostics expander; the separate summary tiles have been removed.
+**Beta 0.1.0b4:** Simplified Recorder history (weight, battery and RSSI graphs only), colored status icons, an estimated-empty date and future-action placeholders. The controls are disabled and make no service calls.
 
-> **Beta 0.1.0b3** — development version. Real Home Assistant device testing is pending. The `main` branch is not released yet.
+> **Beta 0.1.0b4** — development version. Real Home Assistant device testing is pending. The `main` branch is not released yet.
 
 ## Features
 
 - Compact overview: gas amount (kg) beside the fill-level cylinder (%), plus small battery and Bluetooth/RSSI indicators
 - A visual cylinder gauge
 - Diagnostics expander with separate timestamps for **last processed BLE data** and **last Home Assistant weight change**
-- Optional Home Assistant Recorder graphs and recent changes (weight, %, battery and signal)
-- Diagnostics: capacity, usage mode, error, calibration, low-gas flags
+- Optional Home Assistant Recorder graphs for remaining gas (kg), battery (%) and signal strength (dBm); no noisy change log
+- Estimated-empty date between the remaining mass and battery/RSSI indicators when the integration supplies a timestamp
+- Battery icon color: green at 20% or higher, yellow at 10–19%, red below 10%; no reading shows neutral
+- Bluetooth icon color (approximate heuristic): green at −70 dBm or better, yellow from below −70 through −85 dBm, red below −85 dBm; no reading shows neutral
+- Disabled **Refill tank** placeholder shown only when the reported gas level is below 10%
+- Disabled **Recalibrate Scale** and **Settings Only** placeholders in the Diagnostics expander
+- Diagnostics: BLE processing and weight-change timestamps, capacity, usage mode, error, calibration, low-gas flags
 - Swedish and English UI, using Home Assistant's language by default
 - Supports different device addresses and multiple Senso4s scales via configurable entity
 - No dependency on the Wecamp heater, YAML packages, or third-party JS libraries
-- Read-only: the card never sends service calls or writes to the gas scale
+- Read-only: the card never sends service calls or writes to the gas scale. **All three future-action buttons are visual placeholders, disabled in this beta.**
 
 ### Important: BLE freshness versus actual weighing
 
@@ -27,7 +32,7 @@ A fresh BLE packet can repeat the previous mass; it **does not prove that the sc
 For the first Home Assistant test, use the file from the `beta` branch:
 
 1. Copy [senso4s-basic-card.js](https://github.com/Jocke1970/HA-Senso4s-Basic-Card/blob/beta/senso4s-basic-card.js) to `/config/www/senso4s-basic-card.js`.
-2. In **Settings → Dashboards → Resources**, add `/local/senso4s-basic-card.js?v=0.1.0b3` as a **JavaScript module**.
+2. In **Settings → Dashboards → Resources**, add `/local/senso4s-basic-card.js?v=0.1.0b4` as a **JavaScript module**.
 3. Hard-refresh the browser after updating the resource.
 4. Add a **Manual** card with the following YAML:
 
@@ -49,6 +54,10 @@ history_hours: 168
 ```
 
 The example entity is specific to one device; use your own `gas_remaining` entity ID. With only one scale, `entity` may be omitted.
+
+## Planned actions (not operational)
+
+The three buttons are intentionally **disabled** in this beta. They are not wired to the Senso4s integration, and clicking/tapping them cannot refill, recalibrate or open settings. The refill action is hidden when the gas level is unavailable or 10% and above. We will evaluate supported backend operations and safeguards in a later beta before enabling any of them.
 
 ## Configuration
 
