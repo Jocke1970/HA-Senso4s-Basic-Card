@@ -34,8 +34,8 @@ A fresh BLE packet can repeat the previous mass; it **does not prove that the sc
 For the first Home Assistant test, use the file from the `beta` branch:
 
 1. Copy [senso4s-basic-card.js](https://github.com/Jocke1970/HA-Senso4s-Basic-Card/blob/beta/senso4s-basic-card.js) to `/config/www/senso4s-basic-card.js`.
-2. In **Settings → Dashboards → Resources**, add `/local/senso4s-basic-card.js?v=0.1.0b5` as a **JavaScript module**.
-3. Hard-refresh the browser after updating the resource.
+2. In **Settings → Dashboards → Resources**, add `/local/senso4s-basic-card.js` as a **JavaScript module**.
+3. Reload the dashboard after updating the card file.
 4. Add a **Manual** card with the following YAML:
 
 ```yaml
