@@ -419,7 +419,7 @@ test('both embedded Swedish and English translation dictionaries remain synchron
     assert.ok(translations.sv[key], key + ' Swedish');
     assert.ok(translations.en[key], key + ' English');
   }
-  assert.match(js, /VERSION="0\.1\.1b2"/);
+  assert.match(js, /VERSION="0\.1\.1"/);
 });
 
 test('show_history and show_diagnostics default to true for existing dashboards', async () => {
@@ -430,7 +430,7 @@ test('show_history and show_diagnostics default to true for existing dashboards'
   const html = card.shadowRoot.innerHTML;
   assert.match(html, /data-toggle="history"/);
   assert.match(html, /data-toggle="diag"/);
-  assert.match(html, /Senso4s Basic · 0\.1\.1b2/);
+  assert.match(html, /Senso4s Basic · 0\.1\.1/);
   assert.equal(card.getCardSize(), 6);
 });
 
