@@ -1,5 +1,17 @@
 # Changelog
 
+## 0.1.2 — 2026-11-03 (stable)
+
+- Promote the native Home Assistant visual card editor after real-dashboard testing
+- Edit title, detected Senso4s scale, Mini/Standard size, UI language and optional History/Diagnostics without hand-writing YAML
+- Show history-hours input only when relevant; retain settings when switching to Mini
+- Update Lovelace's preview via complete `config-changed` events; keep manual YAML editing available
+- Preserve all existing sensor display, color logic, and disabled future-action placeholders
+- Swedish and English translations verified complete and synchronized (64 keys each)
+
+**Release verification:** JavaScript syntax and 41 simulated frontend tests passed, including editor configuration changes. User verified the editor visually in Home Assistant, with both languages, card sizes and section visibility. Released using `dev → beta → main`.
+
+
 ## 0.1.2b1 — 2026-11-03
 
 - Add a native Home Assistant visual card editor through `getConfigElement()`
