@@ -1,5 +1,19 @@
 # Changelog
 
+## 0.1.1b2 — 2026-11-03
+
+- Add `size: mini` and `size: standard` configuration options; standard is the default, preserving existing cards
+- Mini is a compact Mushroom-style single row with a gas-cylinder icon, remaining mass (kg) and color-only battery/Bluetooth status icons
+- Mini does not show battery %, dBm, gas %, estimated-empty date, section toggles, extra controls or footer
+- Mini follows existing color thresholds (battery green ≥20%, amber 10–19%, red below 10%; BT green ≥−70 dBm, amber down to −85 dBm, red below −85 dBm)
+- Unavailable readings render neutral icons; no invented values
+- Keep both collapsible sections and existing visibility flags in standard mode, with unchanged default behavior
+- Advertise a smaller Sections layout grid width for mini, and retain read-only operation
+- Add regression tests for mini/standard layouts, both language labels, status thresholds and configuration validation
+
+**Validation:** JavaScript syntax and 35 simulated frontend tests passed. Real Home Assistant layout test pending. `main` remains at stable `0.1.0`.
+
+
 ## 0.1.1b1 — 2026-11-03
 
 - Add `show_history` and `show_diagnostics` card configuration booleans, both enabled by default
