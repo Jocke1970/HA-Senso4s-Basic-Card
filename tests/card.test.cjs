@@ -8,19 +8,27 @@ const js = fs.readFileSync(path.join(__dirname, '..', 'senso4s-basic-card.js'), 
 const registry = new Map();
 class HTMLElementMock {
   attachShadow() {
-    const shadow = { innerHTML: '', querySelector: () => null, querySelectorAll: () => [] };
+    const shadow = { innerHTML: '', querySelector: () => null, querySelectorAll: () => [], addEventListener: () => {}, activeElement: null };
     this.shadowRoot = shadow;
     return shadow;
+  }
+  dispatchEvent(event) {
+    this.events = this.events || [];
+    this.events.push(event);
+    return true;
   }
 }
 const sandbox = {
   window: { customCards: [] },
   customElements: { get: (tag) => registry.get(tag), define: (tag, klass) => registry.set(tag, klass) },
   HTMLElement: HTMLElementMock,
+  document: { createElement: tag => new (registry.get(tag))() },
+  CustomEvent: class CustomEvent { constructor(type,options){this.type=type;Object.assign(this,options);} },
   console,
 };
 vm.runInNewContext(js, sandbox, { filename: 'senso4s-basic-card.js' });
 const Card = registry.get('senso4s-basic-card');
+const Editor = registry.get('senso4s-basic-card-editor');
 const base = 'senso4s_gas_sensor_5d32';
 const oldTime = '2026-11-02T21:00:54+00:00';
 const newTime = '2026-11-02T21:30:54+00:00';
@@ -407,7 +415,7 @@ test('both embedded Swedish and English translation dictionaries remain synchron
   const translations = JSON.parse(match[1]);
   const sv = Object.keys(translations.sv).sort();
   const en = Object.keys(translations.en).sort();
-  assert.equal(sv.length, 53);
+  assert.equal(sv.length, 64);
   assert.deepEqual(sv, en);
   for (const key of sv) {
     assert.ok(translations.sv[key].trim(), 'Swedish: ' + key);
@@ -419,7 +427,7 @@ test('both embedded Swedish and English translation dictionaries remain synchron
     assert.ok(translations.sv[key], key + ' Swedish');
     assert.ok(translations.en[key], key + ' English');
   }
-  assert.match(js, /VERSION="0\.1\.1"/);
+  assert.match(js, /VERSION="0\.1\.2b1"/);
 });
 
 test('show_history and show_diagnostics default to true for existing dashboards', async () => {
@@ -430,7 +438,7 @@ test('show_history and show_diagnostics default to true for existing dashboards'
   const html = card.shadowRoot.innerHTML;
   assert.match(html, /data-toggle="history"/);
   assert.match(html, /data-toggle="diag"/);
-  assert.match(html, /Senso4s Basic · 0\.1\.1/);
+  assert.match(html, /Senso4s Basic · 0\.1\.2b1/);
   assert.equal(card.getCardSize(), 6);
 });
 
@@ -613,4 +621,87 @@ test('mini and standard are the only supported size values', () => {
     const card=new Card();
     assert.throws(()=>card.setConfig({size}),/size must be mini or standard/);
   }
+});
+
+test('HA card exposes a visual editor element', () => {
+  assert.equal(typeof Editor, 'function');
+  const editor = Card.getConfigElement();
+  assert.ok(editor instanceof Editor);
+  editor.setConfig({});
+  assert.ok(editor.shadowRoot.innerHTML.includes('data-field="title"'));
+  assert.ok(editor.shadowRoot.innerHTML.includes('data-field="size"'));
+  assert.ok(editor.shadowRoot.innerHTML.includes('data-field="entity"'));
+  assert.ok(editor.shadowRoot.innerHTML.includes('data-field="language"'));
+  assert.ok(editor.shadowRoot.innerHTML.includes('data-field="history_hours"'));
+  assert.ok(editor.shadowRoot.innerHTML.includes('data-field="show_history"'));
+  assert.ok(editor.shadowRoot.innerHTML.includes('data-field="show_diagnostics"'));
+});
+
+test('visual editor localizes labels in Swedish and English', () => {
+  const editor = new Editor();
+  editor.setConfig({ language: 'sv' });
+  editor.hass = { states: makeStates(), language: 'sv' };
+  assert.ok(editor.shadowRoot.innerHTML.includes('Rubrik'));
+  assert.ok(editor.shadowRoot.innerHTML.includes('Kortstorlek'));
+  assert.ok(editor.shadowRoot.innerHTML.includes('Visa sektioner'));
+  editor.setConfig({ language: 'en' });
+  assert.ok(editor.shadowRoot.innerHTML.includes('Card size'));
+  assert.ok(editor.shadowRoot.innerHTML.includes('Display sections'));
+});
+
+test('visual editor discovers scale entities and retains manually configured IDs', () => {
+  const id='sensor.'+base+'_gas_remaining';
+  const editor=new Editor();
+  editor.setConfig({entity: 'sensor.senso4s_missing_gas_remaining'});
+  editor.hass={ states: makeStates(), language:'en' };
+  const html=editor.shadowRoot.innerHTML;
+  assert.ok(html.includes(id));
+  assert.ok(html.includes('sensor.senso4s_missing_gas_remaining'));
+  assert.ok(html.includes('Auto-detect'));
+});
+
+test('editor emits full config-changed with all existing settings preserved', () => {
+  const editor=new Editor();
+  editor.setConfig({type:'custom:senso4s-basic-card',title:'Old title',entity:'sensor.'+base+'_gas_remaining',other_extension:'keep',size:'standard'});
+  editor._handleChange({target:{dataset:{field:'size'},type:'select-one',value:'mini'}});
+  assert.equal(editor.events?.length,1);
+  const ev=editor.events[0];
+  assert.equal(ev.type,'config-changed');
+  assert.equal(ev.bubbles,true);
+  assert.equal(ev.composed,true);
+  assert.equal(ev.detail.config.size,'mini');
+  assert.equal(ev.detail.config.other_extension,'keep');
+  assert.equal(ev.detail.config.type,'custom:senso4s-basic-card');
+  editor._handleChange({target:{dataset:{field:'show_history'},type:'checkbox',checked:false}});
+  assert.equal(editor.events.at(-1).detail.config.show_history,false);
+  editor._handleChange({target:{dataset:{field:'language'},type:'select-one',value:'sv'}});
+  assert.equal(editor.events.at(-1).detail.config.language,'sv');
+});
+
+test('editor updates history window and removes cleared optional fields', () => {
+  const editor=new Editor();
+  editor.setConfig({title:'Original',entity:'sensor.'+base+'_gas_remaining',history_hours:168});
+  editor._handleChange({target:{dataset:{field:'history_hours'},type:'number',value:'999'}});
+  assert.equal(editor.events.at(-1).detail.config.history_hours,720);
+  editor._handleChange({target:{dataset:{field:'title'},type:'text',value:''}});
+  assert.equal(Object.hasOwn(editor.events.at(-1).detail.config,'title'),false);
+  editor._handleChange({target:{dataset:{field:'entity'},type:'select-one',value:''}});
+  assert.equal(Object.hasOwn(editor.events.at(-1).detail.config,'entity'),false);
+  const oldCount=editor.events.length;
+  editor._handleChange({target:{dataset:{field:'unknown_setting'},type:'text',value:'unsafe'}});
+  assert.equal(editor.events.length,oldCount);
+});
+
+test('switching size preserves standard-only settings in visual editor', () => {
+  const editor=new Editor();
+  editor.setConfig({size:'standard',show_history:false,show_diagnostics:true,history_hours:72});
+  editor._handleChange({target:{dataset:{field:'size'},type:'select-one',value:'mini'}});
+  const mini=editor.events.at(-1).detail.config;
+  assert.equal(mini.size,'mini');
+  assert.equal(mini.show_history,false);
+  assert.equal(mini.show_diagnostics,true);
+  assert.equal(mini.history_hours,72);
+  editor._handleChange({target:{dataset:{field:'size'},type:'select-one',value:'standard'}});
+  assert.equal(editor.events.at(-1).detail.config.show_history,false);
+  assert.equal(editor.events.at(-1).detail.config.history_hours,72);
 });
