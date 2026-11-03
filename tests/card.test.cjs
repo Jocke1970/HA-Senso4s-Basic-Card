@@ -820,11 +820,9 @@ test('original SENSO brand icon is bundled into standalone JS as PNG data', () =
   assert.match(js,/const BRAND_ICON="data:image\\/png;base64,/);
   const encoded=js.match(/const BRAND_ICON="data:image\\/png;base64,([^"]+)"/);
   assert.ok(encoded&&encoded[1]);
-  const png=Buffer.from(encoded[1],'base64');
-  assert.equal(png.subarray(0,8).toString('hex'),'89504e470d0a1a0a');
-  assert.equal(png.readUInt32BE(16),128);
-  assert.equal(png.readUInt32BE(20),128);
-  assert.ok(png.length>1000);
+  // PNG signature plus IHDR width/height (128 x 128) in base64.
+  assert.match(encoded[1],/^iVBORw0KGgoAAAANSUhEUgAAAIAAAACAC/);
+  assert.ok(encoded[1].length>2000);
   assert.equal(js.includes('cdn.'),false);
 });
 
