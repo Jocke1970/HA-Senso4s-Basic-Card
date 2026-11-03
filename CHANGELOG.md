@@ -1,5 +1,19 @@
 # Changelog
 
+## 0.1.1 — 2026-11-03 (stable)
+
+- Introduce two Lovelace card sizes: `size: mini` for a single-row, Mushroom-style tile and `size: standard` (backward-compatible default)
+- Mini shows a gas-cylinder icon, the latest gas weight and status-colored battery/Bluetooth icons **without numerical battery or RSSI readings**
+- The mini tile omits gas percentage, estimated-empty date, expansion panels and footer
+- Standard mode adds independent `show_history` and `show_diagnostics` boolean controls, defaulting to `true`
+- A compact top-only standard card and either single-section combination are supported
+- Read-only design retained: future refill, calibration and settings buttons remain disabled
+- Swedish and English translation dictionaries remain synchronized (53 keys each)
+- Resource path remains `/local/senso4s-basic-card.js` without a cache-busting query parameter
+
+**Release verification:** 35 simulated component tests and JavaScript syntax passed; user visually verified mini layout and standard/optional-section layouts in Home Assistant. Changes promoted using `dev → beta → main`.
+
+
 ## 0.1.1b2 — 2026-11-03
 
 - Add `size: mini` and `size: standard` configuration options; standard is the default, preserving existing cards
