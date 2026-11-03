@@ -427,7 +427,7 @@ test('both embedded Swedish and English translation dictionaries remain synchron
     assert.ok(translations.sv[key], key + ' Swedish');
     assert.ok(translations.en[key], key + ' English');
   }
-  assert.match(js, /VERSION="0\.1\.2"/);
+  assert.match(js, /VERSION="0\.1\.3b1"/);
 });
 
 test('show_history and show_diagnostics default to true for existing dashboards', async () => {
@@ -438,7 +438,7 @@ test('show_history and show_diagnostics default to true for existing dashboards'
   const html = card.shadowRoot.innerHTML;
   assert.match(html, /data-toggle="history"/);
   assert.match(html, /data-toggle="diag"/);
-  assert.match(html, /Senso4s Basic · 0\.1\.2/);
+  assert.match(html, /Senso4s Basic · 0\.1\.3b1/);
   assert.equal(card.getCardSize(), 6);
 });
 
@@ -563,7 +563,7 @@ test('mini is a single-row Mushroom-style display with only the requested data',
   assert.equal(html.includes('data-toggle="diag"'), false);
   assert.equal(html.includes('<footer>'), false);
   assert.equal(card.getCardSize(),1);
-  assert.equal(card.getGridOptions().columns,6);
+  assert.equal(card.getGridOptions().columns,12);
   assert.ok(html.includes('.mini-card{padding:0}'));
 });
 
@@ -704,4 +704,16 @@ test('switching size preserves standard-only settings in visual editor', () => {
   editor._handleChange({target:{dataset:{field:'size'},type:'select-one',value:'standard'}});
   assert.equal(editor.events.at(-1).detail.config.show_history,false);
   assert.equal(editor.events.at(-1).detail.config.history_hours,72);
+});
+
+test('mini default Section width matches standard and remains resizable in HA layout', () => {
+  const mini=new Card();
+  mini.setConfig({size:'mini',show_history:false,show_diagnostics:false});
+  const standard=new Card();
+  standard.setConfig({size:'standard'});
+  assert.equal(mini.getGridOptions().columns,12);
+  assert.equal(standard.getGridOptions().columns,12);
+  assert.equal(mini.getGridOptions().rows,'auto');
+  assert.equal(mini.getCardSize(),1);
+  assert.equal(js.includes('grid-template-columns:40px minmax(0,1fr) auto'),true);
 });
