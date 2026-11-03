@@ -419,7 +419,7 @@ test('both embedded Swedish and English translation dictionaries remain synchron
     assert.ok(translations.sv[key], key + ' Swedish');
     assert.ok(translations.en[key], key + ' English');
   }
-  assert.match(js, /VERSION="0\.1\.1b1"/);
+  assert.match(js, /VERSION="0\.1\.1b2"/);
 });
 
 test('show_history and show_diagnostics default to true for existing dashboards', async () => {
@@ -430,7 +430,7 @@ test('show_history and show_diagnostics default to true for existing dashboards'
   const html = card.shadowRoot.innerHTML;
   assert.match(html, /data-toggle="history"/);
   assert.match(html, /data-toggle="diag"/);
-  assert.match(html, /Senso4s Basic · 0\.1\.1b1/);
+  assert.match(html, /Senso4s Basic · 0\.1\.1b2/);
   assert.equal(card.getCardSize(), 6);
 });
 
@@ -516,4 +516,101 @@ test('switching from history-enabled to hidden invalidates pending history reque
   await Promise.resolve();
   assert.equal(card._history.length, 0);
   assert.equal(card.shadowRoot.innerHTML.includes('data-toggle="history"'), false);
+});
+
+test('standard is the default size and preserves existing sections and metrics', async () => {
+  const card=new Card();
+  card.setConfig({language:'sv'});
+  card.hass={states:makeStates(),language:'sv'};
+  await Promise.resolve();
+  const html=card.shadowRoot.innerHTML;
+  assert.equal(card._config.size, 'standard');
+  assert.match(html, /data-toggle="history"/);
+  assert.match(html, /data-toggle="diag"/);
+  assert.match(html, /mini-card/);
+  assert.match(html, /9,50 kg/);
+  assert.match(html, /100 %/);
+  assert.match(html, /51 dBm/);
+  assert.equal(card.getGridOptions().columns, 12);
+});
+
+test('mini is a single-row Mushroom-style display with only the requested data', async () => {
+  const card=new Card();
+  card.setConfig({size:'mini',language:'sv'});
+  card.hass={states:makeStates(),language:'sv'};
+  await Promise.resolve();
+  const html=card.shadowRoot.innerHTML;
+  assert.match(html, /<ha-card class="mini-card"/);
+  assert.match(html, /class="mini-cylinder"/);
+  assert.match(html, /icon="mdi:gas-cylinder"/);
+  assert.match(html, /class="mini-weight"[^>]*>9,50 kg<\/div>/);
+  assert.match(html, /class="mini-signals"/);
+  assert.match(html, /class="mini-status good" role="img" aria-label="Batteri"/);
+  assert.match(html, /class="mini-status good" role="img" aria-label="Bluetooth-signal"/);
+  assert.equal(html.includes('100 %'), false);
+  assert.equal(html.includes('dBm'), false);
+  assert.equal(html.includes('95%'), false);
+  assert.equal(html.includes('Beräknat tom'), false);
+  assert.equal(html.includes('data-toggle="history"'), false);
+  assert.equal(html.includes('data-toggle="diag"'), false);
+  assert.equal(html.includes('<footer>'), false);
+  assert.equal(card.getCardSize(),1);
+  assert.equal(card.getGridOptions().columns,6);
+  assert.ok(html.includes('.mini-card{padding:0}'));
+});
+
+test('mini ignores section visibility flags without mutating them', async () => {
+  const card=new Card();
+  card.setConfig({size:'mini',show_history:true,show_diagnostics:true});
+  card.hass={states:makeStates(),language:'en',callApi:async()=>{throw Error('Recorder must not be requested');}};
+  await Promise.resolve();
+  assert.equal(card.shadowRoot.innerHTML.includes('data-toggle="history"'),false);
+  assert.equal(card.shadowRoot.innerHTML.includes('data-toggle="diag"'),false);
+  card.setConfig({size:'standard',show_history:true,show_diagnostics:true});
+  await Promise.resolve();
+  assert.match(card.shadowRoot.innerHTML,/data-toggle="history"/);
+  assert.match(card.shadowRoot.innerHTML,/data-toggle="diag"/);
+});
+
+test('mini status icon colors follow existing battery and RSSI thresholds', async () => {
+  const levels=[[100,'good'],[20,'good'],[19,'warn'],[10,'warn'],[9,'bad']];
+  const signals=[[-49,'good'],[-70,'good'],[-71,'warn'],[-85,'warn'],[-86,'bad']];
+  for(const [value,tone] of levels){
+    const states=makeStates();
+    states['sensor.'+base+'_battery']=entity('battery',value,{last_seen:newTime});
+    const card=new Card();card.setConfig({size:'mini',language:'sv'});
+    card.hass={states,language:'sv'};await Promise.resolve();
+    assert.ok(card.shadowRoot.innerHTML.includes('class="mini-status '+tone+'" role="img" aria-label="Batteri"'),String(value));
+    assert.equal(card.shadowRoot.innerHTML.includes(String(value)+' %'),false);
+  }
+  for(const [value,tone] of signals){
+    const states=makeStates();
+    states['sensor.'+base+'_signal_strength']=entity('signal_strength',value);
+    const card=new Card();card.setConfig({size:'mini',language:'sv'});
+    card.hass={states,language:'sv'};await Promise.resolve();
+    assert.ok(card.shadowRoot.innerHTML.includes('class="mini-status '+tone+'" role="img" aria-label="Bluetooth-signal"'),String(value));
+    assert.equal(card.shadowRoot.innerHTML.includes(value+' dBm'),false);
+  }
+});
+
+test('mini missing battery, BT and gas mass produce neutral indicators and dash', async () => {
+  const states=makeStates();
+  delete states['sensor.'+base+'_battery'];
+  delete states['sensor.'+base+'_signal_strength'];
+  states['sensor.'+base+'_gas_remaining']=entity('gas_remaining','unavailable');
+  const card=new Card();card.setConfig({size:'mini',language:'en'});
+  card.hass={states,language:'en'};await Promise.resolve();
+  const html=card.shadowRoot.innerHTML;
+  assert.match(html,/class="mini-weight"[^>]*>—<\/div>/);
+  assert.match(html,/class="mini-status neutral" role="img" aria-label="Battery"/);
+  assert.match(html,/class="mini-status neutral" role="img" aria-label="Bluetooth signal"/);
+  assert.match(html,/mdi:battery-unknown/);
+  assert.match(html,/mdi:bluetooth-off/);
+});
+
+test('mini and standard are the only supported size values', () => {
+  for(const size of ['small','large','compact','','MINI',null,1]){
+    const card=new Card();
+    assert.throws(()=>card.setConfig({size}),/size must be mini or standard/);
+  }
 });
