@@ -1,5 +1,19 @@
 # Changelog
 
+## 0.1.2b1 — 2026-11-03
+
+- Add a native Home Assistant visual card editor through `getConfigElement()`
+- Select a Senso4s scale from detected `gas_remaining` sensors, or choose automatic selection
+- Configure card title, Mini/Standard size, Swedish/English/automatic UI, History and Diagnostics visibility, and Recorder history hours (1–720)
+- Standard-only settings are hidden in Mini while their saved values remain intact
+- Send `config-changed` with the complete Lovelace configuration and preserve custom/unknown fields
+- Provide visual configuration in the HA card editor while retaining manual YAML mode
+- Preserve read-only sensor UI; no service calls or actions to the scale
+- Update English documentation and add editor test coverage
+
+**Validation:** JavaScript syntax and 41 simulated tests passed. Home Assistant's actual edit-card dialog and live preview still require manual UI verification. `main` remains stable 0.1.1.
+
+
 ## 0.1.1 — 2026-11-03 (stable)
 
 - Introduce two Lovelace card sizes: `size: mini` for a single-row, Mushroom-style tile and `size: standard` (backward-compatible default)
