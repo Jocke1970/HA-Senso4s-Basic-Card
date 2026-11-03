@@ -1,5 +1,17 @@
 # Changelog
 
+## 0.1.1b1 — 2026-11-03
+
+- Add `show_history` and `show_diagnostics` card configuration booleans, both enabled by default
+- Support a compact top-overview-only mode by disabling both sections (and hiding the footer)
+- Support History-only and Diagnostics-only layouts without affecting other modes
+- Avoid Recorder API calls when History is disabled; invalidate pending requests on configuration changes
+- Preserve existing behavior, read-only operation, disabled action placeholders and Swedish/English UI
+- Add coverage for all four visibility combinations, validation, and history-load cancellation
+
+**Validation:** JavaScript syntax and 29 simulated component tests passed. Real Home Assistant visual verification is pending; `main` remains at stable `0.1.0`.
+
+
 ## 0.1.0 — 2026-11-03 (stable)
 
 First stable release of the standalone Senso4s Basic Lovelace card, based on the visually approved `0.1.0b7` beta.
