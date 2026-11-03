@@ -22,6 +22,20 @@ Settings are sent back to Home Assistant as normal Lovelace card configuration, 
 
 **Validation:** 41 simulated tests passed; the visual editor, both languages, Mini/Standard preview, section controls and history-period visibility were visually verified in Home Assistant.
 
+## Beta 0.1.3b1 — matching Mini and Standard widths
+
+The Mini card now advertises the **same 12-column default width** as Standard in Home Assistant Sections layouts, so cards in one column/stack can visually line up. Mini stays a short, single-row tile. The **Layout** tab can still be used to make either card narrower if desired.
+
+For cards already manually sized to six columns, an explicit saved `grid_options` setting can override the card's new default. In that case, open the card's **Layout** tab and choose the full section width, or set:
+
+```yaml
+grid_options:
+  columns: 12
+  rows: auto
+```
+
+In a regular `vertical-stack`, the card follows the stack's available width automatically. This fix is currently in the [beta JavaScript file](https://github.com/Jocke1970/HA-Senso4s-Basic-Card/blob/beta/senso4s-basic-card.js); stable `main` remains at 0.1.2 pending Home Assistant validation.
+
 ## Card sizes
 
 Choose either layout using `size`. Existing cards continue to use `standard` if no size is specified.
@@ -43,7 +57,7 @@ show_history: true
 show_diagnostics: false
 ```
 
-Both visibility options default to `true`. You can hide both sections for a top-overview-only standard card, or show either one individually. In mini mode they are always hidden, but the configuration is retained if you switch back to standard. The mini version advertises a smaller width in Home Assistant Sections layouts.
+Both visibility options default to `true`. You can hide both sections for a top-overview-only standard card, or show either one individually. In mini mode they are always hidden, but the configuration is retained if you switch back to standard. Mini now advertises the same twelve-column default width as Standard in Sections layouts (beta 0.1.3b1).
 
 To hide both sections in standard mode:
 
