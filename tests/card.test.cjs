@@ -401,7 +401,7 @@ test('diagnostic panel has a symmetric two-by-two grid with icons below labels',
   assert.ok(html.includes('font-size:13px;font-weight:700;text-align:center'));
 });
 
-test('stable release includes matching Swedish and English translation keys', () => {
+test('both embedded Swedish and English translation dictionaries remain synchronized', () => {
   const match = js.match(/const L=(\{[\s\S]*?\});\s*const CSS=/);
   assert.ok(match, 'embedded Swedish/English translation object exists');
   const translations = JSON.parse(match[1]);
@@ -419,5 +419,101 @@ test('stable release includes matching Swedish and English translation keys', ()
     assert.ok(translations.sv[key], key + ' Swedish');
     assert.ok(translations.en[key], key + ' English');
   }
-  assert.match(js, /VERSION="0\.1\.0"/);
+  assert.match(js, /VERSION="0\.1\.1b1"/);
+});
+
+test('show_history and show_diagnostics default to true for existing dashboards', async () => {
+  const card = new Card();
+  card.setConfig({ language: 'sv' });
+  card.hass = { states: makeStates(), language: 'sv' };
+  await Promise.resolve();
+  const html = card.shadowRoot.innerHTML;
+  assert.match(html, /data-toggle="history"/);
+  assert.match(html, /data-toggle="diag"/);
+  assert.match(html, /Senso4s Basic · 0\.1\.1b1/);
+  assert.equal(card.getCardSize(), 6);
+});
+
+test('top-only mode omits both sections and footer but retains gas metrics', async () => {
+  const card = new Card();
+  card.setConfig({ language: 'sv', show_history: false, show_diagnostics: false });
+  card.hass = { states: makeStates(), language: 'sv' };
+  await Promise.resolve();
+  const html = card.shadowRoot.innerHTML;
+  assert.match(html, /9,50 kg/);
+  assert.match(html, /95%/);
+  assert.match(html, /mdi:battery/);
+  assert.match(html, /mdi:bluetooth/);
+  assert.equal(html.includes('data-toggle="history"'), false);
+  assert.equal(html.includes('data-toggle="diag"'), false);
+  assert.equal(html.includes('<footer>'), false);
+  assert.equal(card.getCardSize(), 4);
+});
+
+test('history-only mode excludes diagnostics and supports Recorder graphs', async () => {
+  const card = new Card();
+  card.setConfig({ language: 'en', show_history: true, show_diagnostics: false });
+  let calls = 0;
+  card.hass = { states: makeStates(), language: 'en', callApi: async () => {
+    calls++;
+    return [[
+      { entity_id: 'sensor.' + base + '_gas_remaining', state: '9.7', last_changed: oldTime },
+      { entity_id: 'sensor.' + base + '_gas_remaining', state: '9.5', last_changed: newTime }
+    ]];
+  } };
+  await Promise.resolve();
+  assert.match(card.shadowRoot.innerHTML, /data-toggle="history"/);
+  assert.equal(card.shadowRoot.innerHTML.includes('data-toggle="diag"'), false);
+  card._historyOpen = true;
+  await card._loadHistory();
+  await Promise.resolve();
+  assert.equal(calls, 1);
+  assert.match(card.shadowRoot.innerHTML, /data-view="gas_remaining"/);
+  assert.match(card.shadowRoot.innerHTML, /<footer>/);
+});
+
+test('diagnostics-only mode hides history and prevents Recorder requests', async () => {
+  const card = new Card();
+  card.setConfig({ language: 'sv', show_history: false, show_diagnostics: true });
+  let calls = 0;
+  card.hass = { states: makeStates(), language: 'sv', callApi: async () => { calls++; return []; } };
+  await Promise.resolve();
+  assert.equal(card.shadowRoot.innerHTML.includes('data-toggle="history"'), false);
+  assert.match(card.shadowRoot.innerHTML, /data-toggle="diag"/);
+  card._diagOpen = true;
+  card._schedule();
+  await Promise.resolve();
+  assert.match(card.shadowRoot.innerHTML, /Felstatus/);
+  assert.match(card.shadowRoot.innerHTML, /Kalibrera vågen/);
+  await card._loadHistory();
+  assert.equal(calls, 0);
+  assert.equal(card.getCardSize(), 6);
+});
+
+test('configuration rejects non-boolean visibility flags', () => {
+  for (const config of [
+    { show_history: 'false' },
+    { show_history: 0 },
+    { show_diagnostics: 'true' },
+    { show_diagnostics: null },
+  ]) {
+    const card = new Card();
+    assert.throws(() => card.setConfig(config), /must be boolean/);
+  }
+});
+
+test('switching from history-enabled to hidden invalidates pending history request', async () => {
+  const card = new Card();
+  card.setConfig({ show_history: true, show_diagnostics: false });
+  let finish;
+  card.hass = { states: makeStates(), language: 'sv', callApi: () =>
+    new Promise(resolve => { finish = resolve; })
+  };
+  const pending = card._loadHistory();
+  card.setConfig({ show_history: false, show_diagnostics: false });
+  finish([[{ entity_id: 'sensor.' + base + '_gas_remaining', state: '9.5', last_changed: newTime }]]);
+  await pending;
+  await Promise.resolve();
+  assert.equal(card._history.length, 0);
+  assert.equal(card.shadowRoot.innerHTML.includes('data-toggle="history"'), false);
 });
