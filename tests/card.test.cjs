@@ -627,6 +627,7 @@ test('HA card exposes a visual editor element', () => {
   assert.equal(typeof Editor, 'function');
   const editor = Card.getConfigElement();
   assert.ok(editor instanceof Editor);
+  editor.setConfig({});
   assert.ok(editor.shadowRoot.innerHTML.includes('data-field="title"'));
   assert.ok(editor.shadowRoot.innerHTML.includes('data-field="size"'));
   assert.ok(editor.shadowRoot.innerHTML.includes('data-field="entity"'));
