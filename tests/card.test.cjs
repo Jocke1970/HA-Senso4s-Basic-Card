@@ -415,7 +415,7 @@ test('both embedded Swedish and English translation dictionaries remain synchron
   const translations = JSON.parse(match[1]);
   const sv = Object.keys(translations.sv).sort();
   const en = Object.keys(translations.en).sort();
-  assert.equal(sv.length, 64);
+  assert.equal(sv.length, 66);
   assert.deepEqual(sv, en);
   for (const key of sv) {
     assert.ok(translations.sv[key].trim(), 'Swedish: ' + key);
@@ -427,7 +427,7 @@ test('both embedded Swedish and English translation dictionaries remain synchron
     assert.ok(translations.sv[key], key + ' Swedish');
     assert.ok(translations.en[key], key + ' English');
   }
-  assert.match(js, /VERSION="0\.1\.3b1"/);
+  assert.match(js, /VERSION="0\.1\.3b2"/);
 });
 
 test('show_history and show_diagnostics default to true for existing dashboards', async () => {
@@ -438,7 +438,7 @@ test('show_history and show_diagnostics default to true for existing dashboards'
   const html = card.shadowRoot.innerHTML;
   assert.match(html, /data-toggle="history"/);
   assert.match(html, /data-toggle="diag"/);
-  assert.match(html, /Senso4s Basic · 0\.1\.3b1/);
+  assert.match(html, /Senso4s Basic · 0\.1\.3b2/);
   assert.equal(card.getCardSize(), 6);
 });
 
@@ -716,4 +716,102 @@ test('mini default Section width matches standard and remains resizable in HA la
   assert.equal(mini.getGridOptions().rows,'auto');
   assert.equal(mini.getCardSize(),1);
   assert.equal(js.includes('grid-template-columns:40px minmax(0,1fr) auto'),true);
+});
+
+test('existing Mini remains minimal by default; Standard retains its placeholders', async () => {
+  const mini=new Card();mini.setConfig({size:'mini',language:'sv'});
+  mini.hass={states:makeStates(),language:'sv'};await Promise.resolve();
+  const miniHtml=mini.shadowRoot.innerHTML;
+  assert.equal(mini._actionsVisible(),false);
+  assert.equal(miniHtml.includes('<div class="mini-actions"'),false);
+  assert.equal(miniHtml.includes('class="mini-shell with-actions"'),false);
+  const standard=new Card();standard.setConfig({size:'standard',show_diagnostics:true,language:'sv'});
+  standard.hass={states:makeStates(),language:'sv'};await Promise.resolve();
+  standard._diagOpen=true;standard._schedule();await Promise.resolve();
+  assert.equal(standard._actionsVisible(),true);
+  assert.match(standard.shadowRoot.innerHTML,/Kalibrera vågen/);
+  assert.match(standard.shadowRoot.innerHTML,/Endast inställningar/);
+});
+
+test('Mini with show_actions displays only disabled Calibrate between mass and Bluetooth', async () => {
+  const card=new Card();card.setConfig({size:'mini',show_actions:true,language:'sv'});
+  card.hass={states:makeStates(),language:'sv'};await Promise.resolve();
+  const html=card.shadowRoot.innerHTML;
+  assert.equal(card._actionsVisible(),true);
+  assert.match(html,/class="mini-shell with-actions"/);
+  const mass=html.indexOf('class="mini-weight"');
+  const actions=html.indexOf('<div class="mini-actions"');
+  const signals=html.indexOf('<div class="mini-signals"');
+  assert.ok(mass<actions&&actions<signals);
+  const actionsHtml=html.slice(actions,signals);
+  assert.match(actionsHtml,/mdi:scale-balance/);
+  assert.equal(actionsHtml.includes('mdi:plus-circle-outline'),false);
+  assert.equal((actionsHtml.match(/<button/g)||[]).length,1);
+  assert.equal((actionsHtml.match(/ disabled /g)||[]).length,1);
+  assert.match(actionsHtml,/Kalibrera vågen – Kommer senare/);
+  assert.equal(html.includes('dBm'),false);
+  assert.equal(html.includes('100 %'),false);
+});
+
+test('Mini Refill appears strictly below 10 percent and all actions remain disabled', async () => {
+  for(const [value,shouldRefill] of [[0,true],[9,true],[9.99,true],[10,false],[11,false],[95,false],['unknown',false],['unavailable',false]]){
+    const states=makeStates();
+    states['sensor.'+base+'_gas_level']=entity('gas_level',value);
+    const card=new Card();card.setConfig({size:'mini',show_actions:true,language:'en'});
+    card.hass={states,language:'en'};await Promise.resolve();
+    const html=card.shadowRoot.innerHTML;
+    const actions=html.slice(html.indexOf('<div class="mini-actions"'),html.indexOf('<div class="mini-signals"'));
+    assert.equal(actions.includes('mdi:plus-circle-outline'),shouldRefill,String(value));
+    assert.match(actions,/mdi:scale-balance/);
+    const count=(actions.match(/<button/g)||[]).length;
+    assert.equal(count,shouldRefill?2:1,String(value));
+    assert.equal((actions.match(/ disabled /g)||[]).length,count,String(value));
+    assert.equal(html.includes('call-service'),false);
+  }
+});
+
+test('calibration placeholder gets warning color only when calibration is needed', async () => {
+  for(const [state,expected] of [['on',true],['off',false],['unavailable',false]]){
+    const states=makeStates();
+    states['binary_sensor.'+base+'_needs_calibration']={entity_id:'binary_sensor.'+base+'_needs_calibration',state};
+    const card=new Card();card.setConfig({size:'mini',show_actions:true});
+    card.hass={states,language:'sv'};await Promise.resolve();
+    const action=card.shadowRoot.innerHTML.slice(card.shadowRoot.innerHTML.indexOf('<div class="mini-actions"'));
+    assert.equal(action.includes('class="mini-action warn" disabled aria-label="Kalibrera vågen'),expected,state);
+  }
+});
+
+test('show_actions false hides Standard diagnostic and refill placeholders', async () => {
+  const states=makeStates();
+  states['sensor.'+base+'_gas_level']=entity('gas_level',9);
+  for(const enabled of [false,true]){
+    const card=new Card();card.setConfig({size:'standard',show_actions:enabled,show_diagnostics:true,language:'sv'});
+    card.hass={states,language:'sv'};await Promise.resolve();
+    card._diagOpen=true;card._schedule();await Promise.resolve();
+    const html=card.shadowRoot.innerHTML;
+    assert.equal(html.includes('<div class="pending-actions refill-action"'),enabled);
+    assert.equal(html.includes('<div class="pending-actions" aria-label="Planerade funktioner">'),enabled);
+    assert.equal(html.includes('Kalibrera vågen'),enabled);
+    assert.equal(html.includes('Endast inställningar'),enabled);
+  }
+});
+
+test('visual editor offers localized show_actions control and preserves explicit toggle', () => {
+  for(const [size,locale,label,implicit] of [['mini','sv','Visa snabbknappar',false],['standard','en','Show quick actions',true]]){
+    const editor=new Editor();editor.setConfig({size,language:locale});
+    assert.match(editor.shadowRoot.innerHTML,new RegExp(label));
+    assert.match(editor.shadowRoot.innerHTML,/data-field="show_actions"/);
+    assert.equal(editor._actionsVisible(),implicit);
+    editor._handleChange({target:{dataset:{field:'show_actions'},type:'checkbox',checked:!implicit}});
+    assert.equal(editor.events?.at(-1).detail.config.show_actions,!implicit);
+    editor._handleChange({target:{dataset:{field:'size'},type:'select-one',value:size==='mini'?'standard':'mini'}});
+    assert.equal(editor.events?.at(-1).detail.config.show_actions,!implicit);
+  }
+});
+
+test('show_actions only accepts boolean values', () => {
+  for(const v of ['true','false',0,1,null]){
+    const card=new Card();
+    assert.throws(()=>card.setConfig({show_actions:v}),/show_actions must be a boolean/);
+  }
 });
