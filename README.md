@@ -2,11 +2,11 @@
 
 A standalone, read-only Home Assistant Lovelace card for **Senso4s Basic Bluetooth gas cylinder scales**.
 
-**Stable release: 0.1.1 (2026-11-03).** Home Assistant-verified standard card and Mushroom-style mini card, with optional History and Diagnostics in standard mode. Controls for refill/calibration/settings remain disabled placeholders.
+**Stable release: 0.1.2 (2026-11-03).** Native Home Assistant visual configuration with live preview, Swedish/English UI, Mini/Standard layouts and optional History and Diagnostics in Standard. Controls for refill/calibration/settings remain disabled placeholders.
 
-## Visual card editor — beta 0.1.2b1
+## Visual card editor — stable 0.1.2
 
-Home Assistant's **Edit dashboard → Edit card** dialog now includes a native visual editor for Senso4s Basic Card, without requiring YAML editing. The current editor is available from the [`beta` card file](https://github.com/Jocke1970/HA-Senso4s-Basic-Card/blob/beta/senso4s-basic-card.js); `main` remains on stable 0.1.1 until beta testing is approved.
+Home Assistant's **Edit dashboard → Edit card** dialog now includes a native visual editor for Senso4s Basic Card, without requiring YAML editing. The editor is included in the [stable `main` card file](https://github.com/Jocke1970/HA-Senso4s-Basic-Card/blob/main/senso4s-basic-card.js), and works with Home Assistant's built-in live card preview.
 
 The editor provides:
 
@@ -18,9 +18,9 @@ The editor provides:
 
 Settings are sent back to Home Assistant as normal Lovelace card configuration, so the dashboard's built-in preview updates while editing. Switching to Mini hides the Standard-only controls without discarding their saved values. The editor preserves unknown/advanced YAML options when changing known settings; the YAML editor remains available in Home Assistant.
 
-**Install beta:** replace `/config/www/senso4s-basic-card.js` with the [beta file](https://github.com/Jocke1970/HA-Senso4s-Basic-Card/blob/beta/senso4s-basic-card.js). Keep the dashboard resource as `/local/senso4s-basic-card.js`, without `?v=`. If necessary, clear browser cache using Chromium Developer Tools (**F12** → right-click reload → **Empty cache and hard reload**).
+**Install/update:** use the [stable file](https://github.com/Jocke1970/HA-Senso4s-Basic-Card/blob/main/senso4s-basic-card.js) at `/config/www/senso4s-basic-card.js`. Keep the dashboard resource as `/local/senso4s-basic-card.js`, without `?v=`. If needed, clear browser cache using Chromium Developer Tools (**F12** → right-click reload → **Empty cache and hard reload**).
 
-**Validation:** 41 simulated tests passed; the visual editor still needs validation in a real Home Assistant card-edit dialog.
+**Validation:** 41 simulated tests passed; the visual editor, both languages, Mini/Standard preview, section controls and history-period visibility were visually verified in Home Assistant.
 
 ## Card sizes
 
@@ -74,7 +74,7 @@ Use actual YAML booleans (`true`/`false`, not quoted strings). The resource path
 - Swedish and English UI, using Home Assistant's language by default
 - Supports different device addresses and multiple Senso4s scales via configurable entity
 - No dependency on the Wecamp heater, YAML packages, or third-party JS libraries
-- Read-only: the card never sends service calls or writes to the gas scale. **All three future-action buttons are disabled placeholders in 0.1.1.**
+- Read-only: the card never sends service calls or writes to the gas scale. **All three future-action buttons are disabled placeholders in 0.1.2.**
 
 ### Important: BLE freshness versus actual weighing
 
@@ -114,7 +114,7 @@ The card supports **Swedish** (`sv`) and **English** (`en`). Both language dicti
 
 ## Planned actions (not operational)
 
-The three buttons are intentionally **disabled** in release 0.1.1. They are not wired to the Senso4s integration, and clicking/tapping them cannot refill, recalibrate or open settings. The refill action is hidden when the gas level is unavailable or 10% and above. We will evaluate supported backend operations and safeguards in a later beta before enabling any of them.
+The three buttons are intentionally **disabled** in release 0.1.2. They are not wired to the Senso4s integration, and clicking/tapping them cannot refill, recalibrate or open settings. The refill action is hidden when the gas level is unavailable or 10% and above. We will evaluate supported backend operations and safeguards in a later beta before enabling any of them.
 
 ## Configuration
 
@@ -133,7 +133,7 @@ When history is opened, the card uses the built-in Home Assistant history API. R
 
 ## HACS / Home Assistant Marketplace
 
-The repository includes `hacs.json` with an explicit filename and supports installation as a **Dashboard** custom repository in HACS. The `main` branch contains stable `0.1.1`. The manual installation instructions above also work without HACS.
+The repository includes `hacs.json` with an explicit filename and supports installation as a **Dashboard** custom repository in HACS. The `main` branch contains stable `0.1.2`. The manual installation instructions above also work without HACS.
 
 ## Development and releases
 
