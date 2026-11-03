@@ -817,8 +817,8 @@ test('show_actions only accepts boolean values', () => {
 });
 
 test('original SENSO brand icon is bundled into standalone JS as PNG data', () => {
-  assert.match(js,/const BRAND_ICON="data:image\\/png;base64,/);
-  const encoded=js.match(/const BRAND_ICON="data:image\\/png;base64,([^"]+)"/);
+  assert.match(js,/const BRAND_ICON="data:image[/]png;base64,/);
+  const encoded=js.match(/const BRAND_ICON="data:image[/]png;base64,([^"]+)"/);
   assert.ok(encoded&&encoded[1]);
   // PNG signature plus IHDR width/height (128 x 128) in base64.
   assert.match(encoded[1],/^iVBORw0KGgoAAAANSUhEUgAAAIAAAACAC/);
@@ -834,7 +834,7 @@ test('SENSO icon is displayed in both Standard header and Mini without additiona
     await Promise.resolve();
     const html=card.shadowRoot.innerHTML;
     assert.match(html,/alt="Senso4s"/);
-    assert.match(html,/src="data:image\\/png;base64,/);
+    assert.match(html,/src="data:image[/]png;base64,/);
     assert.equal(html.includes('icon="mdi:gas-cylinder"'),false);
     assert.equal(html.includes('http://'),false);
     assert.equal(html.includes('https://'),false);
