@@ -401,7 +401,7 @@ test('diagnostic panel has a symmetric two-by-two grid with icons below labels',
   assert.ok(html.includes('font-size:13px;font-weight:700;text-align:center'));
 });
 
-test('stable release includes matching Swedish and English translation keys', () => {
+test('both embedded Swedish and English translation dictionaries remain synchronized', () => {
   const match = js.match(/const L=(\{[\s\S]*?\});\s*const CSS=/);
   assert.ok(match, 'embedded Swedish/English translation object exists');
   const translations = JSON.parse(match[1]);
@@ -419,7 +419,7 @@ test('stable release includes matching Swedish and English translation keys', ()
     assert.ok(translations.sv[key], key + ' Swedish');
     assert.ok(translations.en[key], key + ' English');
   }
-  assert.match(js, /VERSION="0\.1\.0"/);
+  assert.match(js, /VERSION="0\.1\.1b1"/);
 });
 
 test('show_history and show_diagnostics default to true for existing dashboards', async () => {
