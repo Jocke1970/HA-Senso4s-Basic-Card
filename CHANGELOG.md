@@ -1,5 +1,18 @@
 # Changelog
 
+## 0.1.3b2 — 2026-11-03
+
+- Add disabled **Refill** and **Calibrate** icon buttons to Mini, positioned between gas weight and battery/Bluetooth status
+- Refilling placeholder appears only when gas level is strictly below 10%; calibration placeholder appears when actions are enabled and receives warning styling if calibration is needed
+- Add `show_actions: true|false` in YAML and the native visual card editor, localized in Swedish and English
+- Keep previous appearance by default: Standard shows its existing placeholders; Mini has none unless opted in
+- Allow hiding Standard's existing disabled action buttons with `show_actions: false`
+- Add accessibility labels, neutral inactive styling, and safeguard that no frontend service calls or state-changing actions are performed
+- Preserve full-width Mini layout and existing Mini/Standard sensors, history, localization and visual editor
+
+**Validation:** JavaScript syntax and 49 simulated frontend tests passed. HA dashboard verification pending. `main` remains stable 0.1.2.
+
+
 ## 0.1.3b1 — 2026-11-03
 
 - Change Mini's default Sections grid width from 6 to 12 columns, matching Standard while keeping Mini's compact one-row content
