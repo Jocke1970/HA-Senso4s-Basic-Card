@@ -4,6 +4,21 @@ A standalone, read-only Home Assistant Lovelace card for **Senso4s Basic Bluetoo
 
 **Stable release: 0.1.0 (2026-11-03).** The 2×2 diagnostic grid has bold, centered headings and status icons. The card was visually approved in Home Assistant; future-action buttons remain intentionally disabled.
 
+## Next beta — 0.1.1b1
+
+The `beta` branch adds optional visibility settings for the two collapsible sections. Both default to `true`, preserving all existing Lovelace configurations:
+
+```yaml
+type: custom:senso4s-basic-card
+title: Senso4s Basic
+show_history: false
+show_diagnostics: false
+```
+
+The configuration above displays **only the top overview** (plus any applicable low-gas refill placeholder/alert): no History or Diagnostics headers, and no version footer. You can also show only one section, e.g. `show_history: true` and `show_diagnostics: false`, or the reverse. Use YAML **booleans** `true`/`false`, not quoted strings. When history is hidden the card makes no Recorder history requests. The standard `main` branch remains at stable `0.1.0` until the beta is tested.
+
+For beta testing, copy [senso4s-basic-card.js from beta](https://github.com/Jocke1970/HA-Senso4s-Basic-Card/blob/beta/senso4s-basic-card.js) to `/config/www/` in place of the stable file. The resource stays `/local/senso4s-basic-card.js`, with no `?v=` suffix.
+
 ## Features
 
 - Compact overview: gas amount (kg) beside the fill-level cylinder (%), plus small battery and Bluetooth/RSSI indicators
@@ -72,6 +87,8 @@ The three buttons are intentionally **disabled** in release 0.1.0. They are not 
 | `entity` | auto-detect | `sensor.…_gas_remaining` for the chosen scale |
 | `language` | `auto` | `auto`, `sv`, or `en` |
 | `history_hours` | `168` | Recorder history window, 1–720 hours |
+| `show_history` | `true` | Show the collapsible History section |
+| `show_diagnostics` | `true` | Show the collapsible Diagnostics section |
 
 When history is opened, the card uses the built-in Home Assistant history API. Recorder must include the selected entities. Missing optional entities display as unavailable.
 
