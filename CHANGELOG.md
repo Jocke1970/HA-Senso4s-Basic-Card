@@ -1,5 +1,18 @@
 # Changelog
 
+## 0.1.3 — 2026-11-03 (stable)
+
+- Mini now requests the same 12-column default width as Standard in Home Assistant Sections layouts while retaining its compact single-row height
+- Add `show_actions` in YAML and the visual editor for disabled quick-action placeholders
+- When Mini actions are enabled, show a disabled Calibrate icon; show disabled Refill only when gas level is strictly below 10%
+- Calibration icon gets warning styling if the scale flags calibration as necessary
+- Backward compatible defaults: Mini has no action icons unless enabled; Standard retains its existing disabled placeholders unless explicitly hidden
+- Swedish and English translations remain synchronized (66 entries each)
+- No service calls or device actions are added. Real Refill/Calibrate functionality will be implemented and reviewed separately
+
+**Verification:** JavaScript syntax and 49 simulated frontend checks passed. Mini, Standard, the visual editor, and the matching card widths were visually confirmed in Home Assistant. The new disabled action placeholders still await direct visual verification.
+
+
 ## 0.1.3b2 — 2026-11-03
 
 - Add disabled **Refill** and **Calibrate** icon buttons to Mini, positioned between gas weight and battery/Bluetooth status
