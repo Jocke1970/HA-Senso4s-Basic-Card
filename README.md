@@ -4,6 +4,24 @@ A standalone, read-only Home Assistant Lovelace card for **Senso4s Basic Bluetoo
 
 **Stable release: 0.1.1 (2026-11-03).** Home Assistant-verified standard card and Mushroom-style mini card, with optional History and Diagnostics in standard mode. Controls for refill/calibration/settings remain disabled placeholders.
 
+## Visual card editor — beta 0.1.2b1
+
+Home Assistant's **Edit dashboard → Edit card** dialog now includes a native visual editor for Senso4s Basic Card, without requiring YAML editing. The current editor is available from the [`beta` card file](https://github.com/Jocke1970/HA-Senso4s-Basic-Card/blob/beta/senso4s-basic-card.js); `main` remains on stable 0.1.1 until beta testing is approved.
+
+The editor provides:
+
+- Title field
+- Senso4s scale selector (auto-detects a single scale or selects a particular `gas_remaining` entity)
+- Card size selector: **Mini** or **Standard**
+- UI language: automatic, Swedish or English
+- Standard-only controls for showing History and Diagnostics, and the History window in hours (1–720)
+
+Settings are sent back to Home Assistant as normal Lovelace card configuration, so the dashboard's built-in preview updates while editing. Switching to Mini hides the Standard-only controls without discarding their saved values. The editor preserves unknown/advanced YAML options when changing known settings; the YAML editor remains available in Home Assistant.
+
+**Install beta:** replace `/config/www/senso4s-basic-card.js` with the [beta file](https://github.com/Jocke1970/HA-Senso4s-Basic-Card/blob/beta/senso4s-basic-card.js). Keep the dashboard resource as `/local/senso4s-basic-card.js`, without `?v=`. If necessary, clear browser cache using Chromium Developer Tools (**F12** → right-click reload → **Empty cache and hard reload**).
+
+**Validation:** 41 simulated tests passed; the visual editor still needs validation in a real Home Assistant card-edit dialog.
+
 ## Card sizes
 
 Choose either layout using `size`. Existing cards continue to use `standard` if no size is specified.
