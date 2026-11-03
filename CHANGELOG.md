@@ -1,5 +1,15 @@
 # Changelog
 
+## 0.1.3b1 — 2026-11-03
+
+- Change Mini's default Sections grid width from 6 to 12 columns, matching Standard while keeping Mini's compact one-row content
+- Allow Home Assistant's Layout tab or explicitly saved `grid_options` to choose a narrower width when desired
+- No changes to sensor readings, languages, visual editor, disabled buttons, or card behavior beyond the layout default
+- Document how to update previously saved 6-column configurations
+
+**Validation:** JavaScript source syntax and 42 simulated frontend tests passed. Home Assistant layout verification is still pending; `main` remains stable 0.1.2.
+
+
 ## 0.1.2 — 2026-11-03 (stable)
 
 - Promote the native Home Assistant visual card editor after real-dashboard testing
