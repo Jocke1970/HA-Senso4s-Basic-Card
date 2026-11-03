@@ -4,6 +4,14 @@ A standalone, read-only Home Assistant Lovelace card for **Senso4s Basic Bluetoo
 
 **Stable release: 0.1.3 (2026-11-03).** Native Home Assistant visual configuration, Swedish/English UI, matching Mini/Standard default widths and optional **disabled** quick-action placeholders. Real refill and calibration operations are not yet implemented.
 
+## Development preview — 0.1.4b1 original SENSO branding
+
+The `dev` branch now embeds a transparent 128 × 128 PNG cropped/cleaned from the user's **original SENSO logo**. It replaces the blue gas-cylinder placeholder icon in the **Standard header** and **Mini tile**. The original dark lettering, lime accent and white round tile are preserved without generated shadows or gray patches.
+
+Because the image is embedded in `senso4s-basic-card.js`, no extra `/local/` asset, external URL or new dashboard resource is needed. Use the [dev JS file](https://github.com/Jocke1970/HA-Senso4s-Basic-Card/blob/dev/senso4s-basic-card.js) only for testing; `beta` and stable `main` remain on their previous release until approved.
+
+This is a visual change only. Card size, Section width, data display, translations, disabled Refill/Calibrate placeholders and the read-only guarantees are unchanged. 52 simulated frontend tests pass, but appearance still needs confirmation in Home Assistant.
+
 ## Visual card editor — stable 0.1.3
 
 Home Assistant's **Edit dashboard → Edit card** dialog now includes a native visual editor for Senso4s Basic Card, without requiring YAML editing. The editor is included in the [stable `main` card file](https://github.com/Jocke1970/HA-Senso4s-Basic-Card/blob/main/senso4s-basic-card.js), and works with Home Assistant's built-in live card preview.
