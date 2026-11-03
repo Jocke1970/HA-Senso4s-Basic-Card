@@ -1,5 +1,15 @@
 # Changelog
 
+## 0.1.4b1 — 2026-11-04 (dev preview)
+
+- Replace the Standard and Mini gas-cylinder placeholder icons with an image based on the user-supplied original SENSO artwork
+- Use a clean white rounded badge, charcoal-and-lime branding, transparent outside and no artificial shadows
+- Embed the 128 px PNG as a data URI in the single JavaScript file; no extra asset installation or network fetching
+- Keep all sensors, Mini width, visual editor, i18n, and disabled Refill/Calibrate placeholders unchanged
+- Add branding regression tests; 52 simulated frontend tests pass
+- Integration brand icon staged separately in `Jocke1970/senso4s_ble` `dev` at `custom_components/senso4s/brand/icon.png`; neither repository is promoted to beta/main
+
+
 ## 0.1.3 — 2026-11-03 (stable)
 
 - Mini now requests the same 12-column default width as Standard in Home Assistant Sections layouts while retaining its compact single-row height
