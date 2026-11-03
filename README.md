@@ -13,6 +13,7 @@ The editor provides:
 - Title field
 - Senso4s scale selector (auto-detects a single scale or selects a particular `gas_remaining` entity)
 - Card size selector: **Mini** or **Standard**
+- Toggle for disabled quick-action icon placeholders (`show_actions`)
 - UI language: automatic, Swedish or English
 - Standard-only controls for showing History and Diagnostics, and the History window in hours (1–720)
 
@@ -21,6 +22,27 @@ Settings are sent back to Home Assistant as normal Lovelace card configuration, 
 **Install/update:** use the [stable file](https://github.com/Jocke1970/HA-Senso4s-Basic-Card/blob/main/senso4s-basic-card.js) at `/config/www/senso4s-basic-card.js`. Keep the dashboard resource as `/local/senso4s-basic-card.js`, without `?v=`. If needed, clear browser cache using Chromium Developer Tools (**F12** → right-click reload → **Empty cache and hard reload**).
 
 **Validation:** 41 simulated tests passed; the visual editor, both languages, Mini/Standard preview, section controls and history-period visibility were visually verified in Home Assistant.
+
+## Beta 0.1.3b2 — Mini quick-action placeholders
+
+The [beta card](https://github.com/Jocke1970/HA-Senso4s-Basic-Card/blob/beta/senso4s-basic-card.js) adds optional Refill and Calibrate icon buttons **between the gas mass and battery/Bluetooth indicators** in Mini:
+
+```yaml
+type: custom:senso4s-basic-card
+size: mini
+show_actions: true
+```
+
+These buttons are **disabled placeholders**. They never call a Home Assistant service, refill the bottle or calibrate the scale. Any future real implementation will require supported Senso4s backend operations and confirmation before changing device state.
+
+- **Refill** (plus icon): only appears when Senso4s reports less than 10% gas; hidden for 10% and above, or an unavailable percentage
+- **Calibrate** (scale icon): always appears when quick actions are enabled, with warning styling when the sensor flags calibration as needed
+- Both display localized accessible names and `Coming later` tooltips; battery/Bluetooth remain value-free status icons in Mini
+- `show_actions: true` or `false` is available in both YAML and the Home Assistant visual card editor
+
+**Backward-compatible defaults:** with `show_actions` omitted, Mini stays minimal with **no buttons**, while Standard continues to show its existing disabled future-action placeholders. Explicit `show_actions: false` also hides those placeholders in Standard. The checkbox in the visual editor reflects these defaults for each size and preserves an explicit choice when switching size.
+
+The previous beta change that makes Mini span the same default 12 columns as Standard is included. Stable `main` remains at 0.1.2 pending Home Assistant tests.
 
 ## Beta 0.1.3b1 — matching Mini and Standard widths
 
@@ -142,6 +164,7 @@ The three buttons are intentionally **disabled** in release 0.1.2. They are not 
 | `show_history` | `true` | Show History in standard mode |
 | `size` | `standard` | `mini` for a Mushroom-like tile; `standard` for the full card |
 | `show_diagnostics` | `true` | Show Diagnostics in standard mode |
+| `show_actions` | `false` (Mini), `true` (Standard) | Show disabled quick-action placeholders; Standard keeps existing buttons by default |
 
 When history is opened, the card uses the built-in Home Assistant history API. Recorder must include the selected entities. Missing optional entities display as unavailable.
 
