@@ -2,9 +2,9 @@
 
 A standalone, read-only Home Assistant Lovelace card for **Senso4s Basic Bluetooth gas cylinder scales**.
 
-**Stable release: 0.1.2 (2026-11-03).** Native Home Assistant visual configuration with live preview, Swedish/English UI, Mini/Standard layouts and optional History and Diagnostics in Standard. Controls for refill/calibration/settings remain disabled placeholders.
+**Stable release: 0.1.3 (2026-11-03).** Native Home Assistant visual configuration, Swedish/English UI, matching Mini/Standard default widths and optional **disabled** quick-action placeholders. Real refill and calibration operations are not yet implemented.
 
-## Visual card editor — stable 0.1.2
+## Visual card editor — stable 0.1.3
 
 Home Assistant's **Edit dashboard → Edit card** dialog now includes a native visual editor for Senso4s Basic Card, without requiring YAML editing. The editor is included in the [stable `main` card file](https://github.com/Jocke1970/HA-Senso4s-Basic-Card/blob/main/senso4s-basic-card.js), and works with Home Assistant's built-in live card preview.
 
@@ -21,34 +21,13 @@ Settings are sent back to Home Assistant as normal Lovelace card configuration, 
 
 **Install/update:** use the [stable file](https://github.com/Jocke1970/HA-Senso4s-Basic-Card/blob/main/senso4s-basic-card.js) at `/config/www/senso4s-basic-card.js`. Keep the dashboard resource as `/local/senso4s-basic-card.js`, without `?v=`. If needed, clear browser cache using Chromium Developer Tools (**F12** → right-click reload → **Empty cache and hard reload**).
 
-**Validation:** 41 simulated tests passed; the visual editor, both languages, Mini/Standard preview, section controls and history-period visibility were visually verified in Home Assistant.
+**Validation:** 49 simulated checks passed. Both card sizes, the visual editor and the full-width Mini layout were visually checked in Home Assistant. The new disabled quick-action placeholders still await a visual check.
 
-## Beta 0.1.3b2 — Mini quick-action placeholders
+## Card width and planned quick actions
 
-The [beta card](https://github.com/Jocke1970/HA-Senso4s-Basic-Card/blob/beta/senso4s-basic-card.js) adds optional Refill and Calibrate icon buttons **between the gas mass and battery/Bluetooth indicators** in Mini:
+In Home Assistant Sections layouts, Mini and Standard both request **12 columns** by default. Mini remains a short, single-row card. You can adjust widths in Home Assistant's **Layout** tab.
 
-```yaml
-type: custom:senso4s-basic-card
-size: mini
-show_actions: true
-```
-
-These buttons are **disabled placeholders**. They never call a Home Assistant service, refill the bottle or calibrate the scale. Any future real implementation will require supported Senso4s backend operations and confirmation before changing device state.
-
-- **Refill** (plus icon): only appears when Senso4s reports less than 10% gas; hidden for 10% and above, or an unavailable percentage
-- **Calibrate** (scale icon): always appears when quick actions are enabled, with warning styling when the sensor flags calibration as needed
-- Both display localized accessible names and `Coming later` tooltips; battery/Bluetooth remain value-free status icons in Mini
-- `show_actions: true` or `false` is available in both YAML and the Home Assistant visual card editor
-
-**Backward-compatible defaults:** with `show_actions` omitted, Mini stays minimal with **no buttons**, while Standard continues to show its existing disabled future-action placeholders. Explicit `show_actions: false` also hides those placeholders in Standard. The checkbox in the visual editor reflects these defaults for each size and preserves an explicit choice when switching size.
-
-The previous beta change that makes Mini span the same default 12 columns as Standard is included. Stable `main` remains at 0.1.2 pending Home Assistant tests.
-
-## Beta 0.1.3b1 — matching Mini and Standard widths
-
-The Mini card now advertises the **same 12-column default width** as Standard in Home Assistant Sections layouts, so cards in one column/stack can visually line up. Mini stays a short, single-row tile. The **Layout** tab can still be used to make either card narrower if desired.
-
-For cards already manually sized to six columns, an explicit saved `grid_options` setting can override the card's new default. In that case, open the card's **Layout** tab and choose the full section width, or set:
+Older saved `grid_options` may override the default. Set the layout to full width, or use:
 
 ```yaml
 grid_options:
@@ -56,7 +35,24 @@ grid_options:
   rows: auto
 ```
 
-In a regular `vertical-stack`, the card follows the stack's available width automatically. This fix is currently in the [beta JavaScript file](https://github.com/Jocke1970/HA-Senso4s-Basic-Card/blob/beta/senso4s-basic-card.js); stable `main` remains at 0.1.2 pending Home Assistant validation.
+In an ordinary `vertical-stack`, Mini follows the stack's available width.
+
+To display quick-action placeholders in Mini, enable `show_actions` in YAML or the visual editor:
+
+```yaml
+type: custom:senso4s-basic-card
+size: mini
+show_actions: true
+```
+
+Both icons appear between gas weight and battery/Bluetooth. **They are disabled and perform no device commands.**
+
+- **Refill:** only shown when Senso4s reports a gas level strictly below 10%; not shown for unknown/unavailable values
+- **Calibrate:** shown whenever actions are enabled; warns visually when calibration is required
+- Mini continues to show no numerical battery or Bluetooth readings
+- Without `show_actions`, Mini remains unchanged with no quick-action buttons, and Standard retains its existing disabled placeholders. Explicit `show_actions: false` hides the placeholders in either size
+
+Actual Refill and Calibrate features are reserved for future development, after backend support and confirmation safeguards have been verified.
 
 ## Card sizes
 
@@ -79,7 +75,7 @@ show_history: true
 show_diagnostics: false
 ```
 
-Both visibility options default to `true`. You can hide both sections for a top-overview-only standard card, or show either one individually. In mini mode they are always hidden, but the configuration is retained if you switch back to standard. Mini now advertises the same twelve-column default width as Standard in Sections layouts (beta 0.1.3b1).
+Both visibility options default to `true`. You can hide both sections for a top-overview-only standard card, or show either one individually. In mini mode they are always hidden, but the configuration is retained if you switch back to standard. Mini advertises the same twelve-column default width as Standard in Sections layouts.
 
 To hide both sections in standard mode:
 
@@ -170,7 +166,7 @@ When history is opened, the card uses the built-in Home Assistant history API. R
 
 ## HACS / Home Assistant Marketplace
 
-The repository includes `hacs.json` with an explicit filename and supports installation as a **Dashboard** custom repository in HACS. The `main` branch contains stable `0.1.2`. The manual installation instructions above also work without HACS.
+The repository includes `hacs.json` with an explicit filename and supports installation as a **Dashboard** custom repository in HACS. The `main` branch contains stable `0.1.3`. The manual installation instructions above also work without HACS.
 
 ## Development and releases
 
