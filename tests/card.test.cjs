@@ -427,7 +427,7 @@ test('both embedded Swedish and English translation dictionaries remain synchron
     assert.ok(translations.sv[key], key + ' Swedish');
     assert.ok(translations.en[key], key + ' English');
   }
-  assert.match(js, /VERSION="0\.1\.3"/);
+  assert.match(js, /VERSION="0\.1\.4b1"/);
 });
 
 test('show_history and show_diagnostics default to true for existing dashboards', async () => {
@@ -438,7 +438,7 @@ test('show_history and show_diagnostics default to true for existing dashboards'
   const html = card.shadowRoot.innerHTML;
   assert.match(html, /data-toggle="history"/);
   assert.match(html, /data-toggle="diag"/);
-  assert.match(html, /Senso4s Basic · 0\.1\.3/);
+  assert.match(html, /Senso4s Basic · 0\.1\.4b1/);
   assert.equal(card.getCardSize(), 6);
 });
 
@@ -550,7 +550,7 @@ test('mini is a single-row Mushroom-style display with only the requested data',
   const html=card.shadowRoot.innerHTML;
   assert.match(html, /<ha-card class="mini-card"/);
   assert.match(html, /class="mini-cylinder"/);
-  assert.match(html, /icon="mdi:gas-cylinder"/);
+  assert.match(html, /<img src="data:image\/png;base64,/);
   assert.match(html, /class="mini-weight"[^>]*>9,50 kg<\/div>/);
   assert.match(html, /class="mini-signals"/);
   assert.match(html, /class="mini-status good" role="img" aria-label="Batteri"/);
@@ -814,4 +814,40 @@ test('show_actions only accepts boolean values', () => {
     const card=new Card();
     assert.throws(()=>card.setConfig({show_actions:v}),/show_actions must be a boolean/);
   }
+});
+
+test('original SENSO brand icon is bundled into standalone JS as PNG data', () => {
+  assert.match(js,/const BRAND_ICON="data:image\\/png;base64,/);
+  const encoded=js.match(/const BRAND_ICON="data:image\\/png;base64,([^"]+)"/);
+  assert.ok(encoded&&encoded[1]);
+  const png=Buffer.from(encoded[1],'base64');
+  assert.equal(png.subarray(0,8).toString('hex'),'89504e470d0a1a0a');
+  assert.equal(png.readUInt32BE(16),128);
+  assert.equal(png.readUInt32BE(20),128);
+  assert.ok(png.length>1000);
+  assert.equal(js.includes('cdn.'),false);
+});
+
+test('SENSO icon is displayed in both Standard header and Mini without additional assets', async () => {
+  for(const size of ['standard','mini']){
+    const card=new Card();
+    card.setConfig({size,show_actions:size==='mini'});
+    card.hass={states:makeStates(),language:'sv'};
+    await Promise.resolve();
+    const html=card.shadowRoot.innerHTML;
+    assert.match(html,/alt="Senso4s"/);
+    assert.match(html,/src="data:image\\/png;base64,/);
+    assert.equal(html.includes('icon="mdi:gas-cylinder"'),false);
+    assert.equal(html.includes('http://'),false);
+    assert.equal(html.includes('https://'),false);
+    assert.ok(html.includes(size==='mini'?'class="mini-cylinder"':'class="logo"'));
+  }
+});
+
+test('branding update preserves read-only semantics and mini width', () => {
+  const card=new Card();
+  card.setConfig({size:'mini'});
+  assert.equal(card.getGridOptions().columns,12);
+  assert.equal(js.includes('callService('),false);
+  assert.equal(js.includes('BRAND_ICON'),true);
 });
