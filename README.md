@@ -2,41 +2,41 @@
 
 A standalone, read-only Home Assistant Lovelace card for **Senso4s Basic Bluetooth gas cylinder scales**.
 
-**Stable release: 0.1.0 (2026-11-03).** The 2×2 diagnostic grid has bold, centered headings and status icons. The card was visually approved in Home Assistant; future-action buttons remain intentionally disabled.
+**Stable release: 0.1.1 (2026-11-03).** Home Assistant-verified standard card and Mushroom-style mini card, with optional History and Diagnostics in standard mode. Controls for refill/calibration/settings remain disabled placeholders.
 
-## Current beta — 0.1.1b2
+## Card sizes
 
-The `beta` branch now supports two layouts selected with `size: standard` (default) or `size: mini`:
+Choose either layout using `size`. Existing cards continue to use `standard` if no size is specified.
+
+**Mini** — single-row gas-cylinder icon, remaining gas mass, and dynamic battery/Bluetooth colors (no numbers for battery or RSSI, no history or diagnostics):
 
 ```yaml
-# Mushroom-style mini tile: cylinder icon, gas mass, battery and Bluetooth icons.
 type: custom:senso4s-basic-card
 size: mini
 entity: sensor.senso4s_gas_sensor_5d32_gas_remaining
 ```
 
-Mini mode deliberately displays **only** the gas-cylinder icon, gas mass (kg), and battery/Bluetooth icons. The two status icons use the same color thresholds as standard mode but do **not** display numeric battery percentage, RSSI/dBm, timestamps, gas percentage, or extra controls. An unavailable value is neutral gray. Mini has no History/Diagnostics sections or footer, regardless of the `show_history`/`show_diagnostics` settings. Switching back to standard preserves those settings. Mini advertises a six-column span in Home Assistant Sections layouts; standard retains the existing twelve-column span.
+**Standard** — full card with optional sections:
 
 ```yaml
-# Existing standard card with optional sections.
 type: custom:senso4s-basic-card
 size: standard
 show_history: true
 show_diagnostics: false
 ```
 
-The original section visibility settings remain available in **standard** mode. The `beta` branch adds optional visibility settings for the two collapsible sections. Both default to `true`, preserving all existing Lovelace configurations:
+Both visibility options default to `true`. You can hide both sections for a top-overview-only standard card, or show either one individually. In mini mode they are always hidden, but the configuration is retained if you switch back to standard. The mini version advertises a smaller width in Home Assistant Sections layouts.
+
+To hide both sections in standard mode:
 
 ```yaml
 type: custom:senso4s-basic-card
-title: Senso4s Basic
+size: standard
 show_history: false
 show_diagnostics: false
 ```
 
-The configuration above displays **only the top overview** (plus any applicable low-gas refill placeholder/alert): no History or Diagnostics headers, and no version footer. You can also show only one section, e.g. `show_history: true` and `show_diagnostics: false`, or the reverse. Use YAML **booleans** `true`/`false`, not quoted strings. When history is hidden the card makes no Recorder history requests. The standard `main` branch remains at stable `0.1.0` until the beta is tested.
-
-For beta testing, copy [senso4s-basic-card.js from beta](https://github.com/Jocke1970/HA-Senso4s-Basic-Card/blob/beta/senso4s-basic-card.js) to `/config/www/` in place of the stable file. The resource stays `/local/senso4s-basic-card.js`, with no `?v=` suffix.
+Use actual YAML booleans (`true`/`false`, not quoted strings). The resource path is always `/local/senso4s-basic-card.js`; no version query string is needed.
 
 ## Features
 
@@ -56,7 +56,7 @@ For beta testing, copy [senso4s-basic-card.js from beta](https://github.com/Jock
 - Swedish and English UI, using Home Assistant's language by default
 - Supports different device addresses and multiple Senso4s scales via configurable entity
 - No dependency on the Wecamp heater, YAML packages, or third-party JS libraries
-- Read-only: the card never sends service calls or writes to the gas scale. **All three future-action buttons are disabled placeholders in 0.1.0.**
+- Read-only: the card never sends service calls or writes to the gas scale. **All three future-action buttons are disabled placeholders in 0.1.1.**
 
 ### Important: BLE freshness versus actual weighing
 
@@ -96,7 +96,7 @@ The card supports **Swedish** (`sv`) and **English** (`en`). Both language dicti
 
 ## Planned actions (not operational)
 
-The three buttons are intentionally **disabled** in release 0.1.0. They are not wired to the Senso4s integration, and clicking/tapping them cannot refill, recalibrate or open settings. The refill action is hidden when the gas level is unavailable or 10% and above. We will evaluate supported backend operations and safeguards in a later beta before enabling any of them.
+The three buttons are intentionally **disabled** in release 0.1.1. They are not wired to the Senso4s integration, and clicking/tapping them cannot refill, recalibrate or open settings. The refill action is hidden when the gas level is unavailable or 10% and above. We will evaluate supported backend operations and safeguards in a later beta before enabling any of them.
 
 ## Configuration
 
@@ -115,7 +115,7 @@ When history is opened, the card uses the built-in Home Assistant history API. R
 
 ## HACS / Home Assistant Marketplace
 
-The repository includes `hacs.json` with an explicit filename and supports installation as a **Dashboard** custom repository in HACS. The `main` branch contains the stable `0.1.0` version. The manual installation instructions above also work without HACS.
+The repository includes `hacs.json` with an explicit filename and supports installation as a **Dashboard** custom repository in HACS. The `main` branch contains stable `0.1.1`. The manual installation instructions above also work without HACS.
 
 ## Development and releases
 
