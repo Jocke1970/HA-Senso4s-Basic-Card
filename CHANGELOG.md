@@ -1,5 +1,12 @@
 # Changelog
 
+## 0.1.5b2 — 2026-11-04 (dev Mini icon regression fix)
+
+- Restore the original blue `mdi:gas-cylinder` icon in Mini; SENSO logo remains in the Standard header
+- Preserve the original compact Mini layout for Basic and Plus (including synthetic previews)
+- Update frontend regression tests: 66 simulated checks pass
+- Still dev only; beta/main remain unchanged
+
 ## 0.1.5b1 — 2026-11-04 (dev preview: Basic/Plus)
 
 - One backward-compatible Lovelace card for Basic and Plus, with model detection using `usage_mode.attributes.is_plus_model` and HA's device registry as fallback
