@@ -166,6 +166,49 @@ test('English diagnostic timestamps are translated', async () => {
   assert.match(card.shadowRoot.innerHTML, /Last weight change in HA/);
 });
 
+test('history mass chart has a 0–10 kg axis with labeled horizontal gridlines and date ticks', async () => {
+  const card=new Card();card.setConfig({language:'sv',history_hours:168});
+  card.hass={states:{...makeStates(),['sensor.'+base+'_gas_capacity']:entity('gas_capacity',10)},language:'sv'};
+  await Promise.resolve();
+  card._history=[[{entity_id:'sensor.'+base+'_gas_remaining',state:'0',last_changed:new Date(Date.now()-6*86400000).toISOString()},
+                  {entity_id:'sensor.'+base+'_gas_remaining',state:'9.7',last_changed:new Date(Date.now()-2*86400000).toISOString()},
+                  {entity_id:'sensor.'+base+'_gas_remaining',state:'9',last_changed:new Date().toISOString()}]];
+  const graph=card._chart();
+  assert.match(graph,/0\.00–9\.70 kg/); // actual recorded min/max, separate from the axis
+  for(const n of [0,2,4,6,8,10])assert.match(graph,new RegExp('class="chart-label"[^>]*>'+n+'<'));
+  assert.equal((graph.match(/class="chart-grid"/g)||[]).length,6);
+  assert.equal((graph.match(/class="chart-time"/g)||[]).length,3);
+  assert.match(graph,/ H[0-9.]+ V[0-9.]+/);
+});
+
+test('mass chart expands beyond cylinder capacity instead of clipping recorded values', async () => {
+  const card=new Card();card.setConfig({language:'en'});
+  card.hass={states:{...makeStates(),['sensor.'+base+'_gas_capacity']:entity('gas_capacity',10)},language:'en'};
+  await Promise.resolve();
+  card._history=[[{entity_id:'sensor.'+base+'_gas_remaining',state:'12.2',last_changed:new Date().toISOString()}]];
+  const graph=card._chart();
+  assert.match(graph,/12\.20–12\.20 kg/);
+  assert.match(graph,/class="chart-label"[^>]*>12.5</);
+});
+
+test('battery and Bluetooth history get distinct units and numeric Y axes', async () => {
+  const card=new Card();card.setConfig({language:'en'});
+  card.hass={states:makeStates(),language:'en'};
+  await Promise.resolve();
+  const now=new Date().toISOString();
+  card._history=[[{entity_id:'sensor.'+base+'_battery',state:'55',last_changed:now}],
+                 [{entity_id:'sensor.'+base+'_signal_strength',state:'-59',last_changed:now}]];
+  card._view='battery';
+  const battery=card._chart();
+  assert.match(battery,/class="chart-label chart-unit"[^>]*>%</);
+  for(const n of [0,25,50,75,100])assert.match(battery,new RegExp('class="chart-label"[^>]*>'+n+'<'));
+  card._view='rssi';
+  const rssi=card._chart();
+  assert.match(rssi,/class="chart-label chart-unit"[^>]*>dBm</);
+  assert.match(rssi,/class="chart-grid"/);
+  assert.match(rssi,/class="chart-label"[^>]*>−?-[0-9]+</);
+});
+
 test('history only shows mass, battery, RSSI charts without a change log', async () => {
   const card = new Card();
   card.setConfig({ language: 'sv' });
@@ -418,7 +461,7 @@ test('bundled translations contain synchronized Swedish, English, Spanish and Fi
     assert.deepEqual(Object.keys(dictionaries[locale]).sort(),en,locale);
     for(const key of en)assert.ok(dictionaries[locale][key].trim(),locale+'.'+key);
   }
-  assert.match(js,/VERSION="0\.1\.5b5"/);
+  assert.match(js,/VERSION="0\.1\.5b6"/);
 });
 
 test('Spanish, Finnish and fallback locales render without mixing languages', async () => {
@@ -438,7 +481,7 @@ test('show_history and show_diagnostics default to true for existing dashboards'
   const html = card.shadowRoot.innerHTML;
   assert.match(html, /data-toggle="history"/);
   assert.match(html, /data-toggle="diag"/);
-  assert.match(html, /Senso4s Basic · 0\.1\.5b5/);
+  assert.match(html, /Senso4s Basic · 0\.1\.5b6/);
   assert.equal(card.getCardSize(), 6);
 });
 

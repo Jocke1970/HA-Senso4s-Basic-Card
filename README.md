@@ -4,6 +4,10 @@ A standalone, read-only Home Assistant Lovelace card for **Senso4s Basic and Plu
 
 **Stable release: 0.1.3 (2026-11-03).** Native Home Assistant visual configuration, Swedish/English UI, matching Mini/Standard default widths and optional **disabled** quick-action placeholders. Real refill and calibration operations are not yet implemented.
 
+## Development preview — 0.1.5b6 labeled history charts
+
+**Dev only.** The Standard history view now draws a numeric Y axis and horizontal reference lines for gas mass, battery percentage, and Bluetooth signal, plus date/time markers on the X axis. For gas mass, the Y axis starts at zero and uses the reported cylinder capacity (e.g., 0–10 kg for P10); it expands if a historical measurement exceeds that capacity. The small number range above the chart still shows **observed minimum–maximum**, not the axis limits. Recorder data stays unchanged, and the weight graph remains a discrete step plot. There are no new language strings, Lovelace options, or HACS resources.
+
 ## Development preview — 0.1.5b5 diagnostic states and multi-language source files
 
 **Dev only; beta and main remain unchanged.** Plus diagnostics hide disabled/missing optional entities, show **Problem** with a clear explanation for entities explicitly marked `unavailable`, and show neutral unknown indicators for active entities in state `unknown`. An entirely disabled Plus diagnostics set displays a short localized explanation instead of four empty tiles. The visual editor adds a synthetic `plus_unavailable` scenario.

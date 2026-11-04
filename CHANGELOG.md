@@ -1,5 +1,13 @@
 # Changelog
 
+## 0.1.5b6 — 2026-11-04 (dev history axes and gridlines)
+
+- Add numeric Y-axis ticks, horizontal gridlines and localized time/date ticks to gas mass, battery and RSSI history charts
+- Prefer 0–reported gas capacity (e.g. P10 = 0–10 kg) and expand scale to keep out-of-range historical values visible
+- Keep actual recorded min/max separate from axis scale and retain the discrete step plot without changing Recorder values
+- Dev only; beta/main untouched pending visual review
+
+
 ## 0.1.5b5 — 2026-11-04 (dev translations and Plus diagnostics)
 
 - Move translations into separate English, Swedish, Spanish and Finnish JSON sources, bundle into one HACS JS file with reproducible Node build
