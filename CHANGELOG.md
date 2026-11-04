@@ -1,5 +1,18 @@
 # Changelog
 
+## 0.1.5b1 — 2026-11-04 (dev preview: Basic/Plus)
+
+- One backward-compatible Lovelace card for Basic and Plus, with model detection using `usage_mode.attributes.is_plus_model` and HA's device registry as fallback
+- Plus-specific diagnostics: overall, temperature, incline/tilt and motion anomaly indicators
+- Disabled or unavailable Plus entity states remain neutral/unknown; missing data is never interpreted as healthy
+- Mini shows the Plus model and a warning when the aggregate anomaly flag is active; Standard adds expanded Plus diagnostics
+- Add isolated fictional Basic and Plus test fixtures, including normal, active tilt warning and disabled-entities cases
+- Add explicit `demo_mode` selection to the native visual editor: `off | basic | plus | plus_warning | plus_disabled`
+- No test values are written to Home Assistant; demo charts are synthetic and never call the Recorder API
+- Swedish/English dictionaries expanded in sync to 83 keys each
+- 63 simulated frontend tests pass; browser/dashboard visual confirmation and beta promotion remain outstanding
+- Stable `main` stays 0.1.3, and real Refill/Calibrate service actions are not included
+
 ## 0.1.4b1 — 2026-11-04 (dev preview)
 
 - Replace the Standard and Mini gas-cylinder placeholder icons with an image based on the user-supplied original SENSO artwork
