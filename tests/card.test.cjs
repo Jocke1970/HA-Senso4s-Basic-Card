@@ -716,7 +716,7 @@ test('mini default Section width matches standard and remains resizable in HA la
   assert.equal(standard.getGridOptions().columns,12);
   assert.equal(mini.getGridOptions().rows,'auto');
   assert.equal(mini.getCardSize(),1);
-  assert.equal(js.includes('grid-template-columns:40px minmax(0,1fr) auto'),true);
+  assert.equal(js.includes('grid-template-columns:86px minmax(0,1fr) auto'),true);
 });
 
 test('existing Mini remains minimal by default; Standard retains its placeholders', async () => {
@@ -1127,8 +1127,8 @@ test('Mini keeps both icons with Plus warning and when quick actions are enabled
   assert.match(html,/PLUS !/);
   assert.match(html,/class="mini-shell with-actions"/);
   assert.match(html,/class="mini-action /);
-  assert.match(html,/\\.mini-shell\\.with-actions\\{grid-template-columns:86px/);
-  assert.match(html,/@media\\(max-width:300px\\)/);
+  assert.match(html,/\.mini-shell\.with-actions\{grid-template-columns:86px/);
+  assert.match(html,/@media\(max-width:300px\)/);
   assert.equal(card.getGridOptions().columns,12);
   assert.equal(card.getCardSize(),1);
 });
