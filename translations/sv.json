@@ -72,7 +72,7 @@
   "temperatureAnomaly": "Temperaturavvikelse",
   "inclineAnomaly": "Lutningsavvikelse",
   "motionAnomaly": "Rörelseavvikelse",
-  "plusDisabledHint": "Plus-diagnostiikka är avaktiverad. Aktivera sensorerna under enhetens entiteter i Home Assistant för att visa deras status.",
+  "plusDisabledHint": "Plus-diagnostik är avaktiverad. Aktivera sensorerna under enhetens entiteter i Home Assistant för att visa deras status.",
   "plusUnknown": "Ej aktiverad / saknar värde",
   "demoLabel": "DEMO – fiktiv enhet, inga verkliga mätvärden",
   "editorDemo": "Testenhet (endast förhandsvisning)",

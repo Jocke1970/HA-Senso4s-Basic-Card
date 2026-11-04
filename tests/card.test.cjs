@@ -868,12 +868,11 @@ test('real Plus model is detected from usage_mode even with all optional anomaly
   assert.match(card.shadowRoot.innerHTML,/Senso4s Plus/);
   card._diagOpen=true;card._schedule();await Promise.resolve();
   const html=card.shadowRoot.innerHTML;
-  assert.match(html,/Plus-diagnostik/);
-  assert.match(html,/Temperaturavvikelse/);
-  assert.match(html,/Lutningsavvikelse/);
-  assert.match(html,/Rörelseavvikelse/);
-  assert.match(html,/Ej aktiverad \/ saknar värde/);
-  assert.match(html,/en eller flera anomalisensorer är avaktiverade/);
+  assert.match(html,/Plus-diagnostik är avaktiverad/);
+  assert.equal(html.includes('class="plus-heading"'),false);
+  assert.equal(html.includes('Temperaturavvikelse'),false);
+  assert.equal(html.includes('Lutningsavvikelse'),false);
+  assert.equal(html.includes('Rörelseavvikelse'),false);
   assert.equal(html.includes('Plus-enheten rapporterar en avvikelse'),false);
 });
 
@@ -890,7 +889,7 @@ test('Plus detection falls back to HA device registry when usage_mode is disable
   assert.equal(card._model(),'plus');
   assert.match(card.shadowRoot.innerHTML,/Senso4s Plus/);
   card._diagOpen=true;card._schedule();await Promise.resolve();
-  assert.match(card.shadowRoot.innerHTML,/This device supports Plus features/);
+  assert.match(card.shadowRoot.innerHTML,/Plus diagnostics are disabled/);
 });
 
 test('explicit Basic flag takes priority over other guesses', async () => {
@@ -962,6 +961,33 @@ test('Plus explicitly unavailable sensor reports Problem, not healthy or disable
   const mini=new Card();mini.setConfig({language:'en',size:'mini',demo_mode:'plus_unavailable'});
   mini.hass={states:{},language:'en'};await Promise.resolve();
   assert.match(mini.shadowRoot.innerHTML,/PLUS \?/);
+});
+
+test('Partially disabled Plus diagnostics show only enabled tiles', async () => {
+  const states=makeStates();
+  states['sensor.'+base+'_usage_mode']=entity('usage_mode','Heating',{is_plus_model:true});
+  states['binary_sensor.'+base+'_has_anomaly']={entity_id:'binary_sensor.'+base+'_has_anomaly',state:'off',attributes:{}};
+  const card=new Card();card.setConfig({language:'en'});
+  card.hass={states,language:'en'};
+  await Promise.resolve();card._diagOpen=true;card._schedule();await Promise.resolve();
+  const html=card.shadowRoot.innerHTML;
+  assert.match(html,/Overall anomaly/);
+  assert.match(html,/Some Plus diagnostic sensors are disabled/);
+  assert.equal(html.includes('Temperature anomaly'),false);
+  assert.equal(html.includes('Plus diagnostics are disabled'),false);
+});
+
+test('Active Plus sensor with unknown state is neutral, not Problem', async () => {
+  const states=makeStates();
+  states['sensor.'+base+'_usage_mode']=entity('usage_mode','Heating',{is_plus_model:true});
+  states['binary_sensor.'+base+'_temperature_anomaly']={entity_id:'binary_sensor.'+base+'_temperature_anomaly',state:'unknown',attributes:{}};
+  const card=new Card();card.setConfig({language:'en'});
+  card.hass={states,language:'en'};
+  await Promise.resolve();card._diagOpen=true;card._schedule();await Promise.resolve();
+  const html=card.shadowRoot.innerHTML;
+  const i=html.indexOf('Temperature anomaly');assert.ok(i>0);
+  assert.match(html.slice(i,i+350),/class="diag-visual neutral"/);
+  assert.equal(html.includes('One or more Plus sensors are unavailable'),false);
 });
 
 test('synthetic Basic preview has no Plus badge or Plus diagnostic section', async () => {
