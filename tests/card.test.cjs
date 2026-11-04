@@ -427,7 +427,7 @@ test('both embedded Swedish and English translation dictionaries remain synchron
     assert.ok(translations.sv[key], key + ' Swedish');
     assert.ok(translations.en[key], key + ' English');
   }
-  assert.match(js, /VERSION="0\.1\.5b3"/);
+  assert.match(js, /VERSION="0\.1\.5b4"/);
 });
 
 test('show_history and show_diagnostics default to true for existing dashboards', async () => {
@@ -438,7 +438,7 @@ test('show_history and show_diagnostics default to true for existing dashboards'
   const html = card.shadowRoot.innerHTML;
   assert.match(html, /data-toggle="history"/);
   assert.match(html, /data-toggle="diag"/);
-  assert.match(html, /Senso4s Basic · 0\.1\.5b3/);
+  assert.match(html, /Senso4s Basic · 0\.1\.5b4/);
   assert.equal(card.getCardSize(), 6);
 });
 
@@ -549,7 +549,8 @@ test('mini is a single-row Mushroom-style display with only the requested data',
   await Promise.resolve();
   const html=card.shadowRoot.innerHTML;
   assert.match(html, /<ha-card class="mini-card"/);
-  assert.match(html, /class="mini-cylinder"/);
+  assert.match(html, /class="mini-brand"/);
+  assert.match(html, /class="mini-cylinder normal"/);
   assert.match(html, /<ha-icon icon="mdi:gas-cylinder"><\/ha-icon>/);
   assert.match(html, /class="mini-weight"[^>]*>9,50 kg<\/div>/);
   assert.match(html, /class="mini-signals"/);
@@ -826,7 +827,7 @@ test('original SENSO brand icon is bundled into standalone JS as PNG data', () =
   assert.equal(js.includes('cdn.'),false);
 });
 
-test('SENSO brand remains in Standard header and original gas cylinder is restored in Mini', async () => {
+test('SENSO brand is visible alongside the gas cylinder in Mini and remains in Standard header', async () => {
   for(const size of ['standard','mini']){
     const card=new Card();
     card.setConfig({size,show_actions:size==='mini'});
@@ -834,9 +835,10 @@ test('SENSO brand remains in Standard header and original gas cylinder is restor
     await Promise.resolve();
     const html=card.shadowRoot.innerHTML;
     if(size==='mini'){
-      assert.match(html,/class="mini-cylinder" role="img"/);
+      assert.match(html,/class="mini-brand"/);
+      assert.match(html,/class="mini-brand-logo"><img src="data:image[/]png;base64,/);
+      assert.match(html,/class="mini-cylinder normal" role="img"/);
       assert.match(html,/icon="mdi:gas-cylinder"/);
-      assert.equal(html.includes('<img src="data:image/png;base64,'),false);
       assert.equal(html.includes('class="logo"'),false);
     }else{
       assert.match(html,/class="logo"><img src="data:image[/]png;base64,/);
@@ -1044,7 +1046,8 @@ test('Mini cylinder icon works for Basic, Plus, and every synthetic preview', as
     await Promise.resolve();
     const html=card.shadowRoot.innerHTML;
     assert.match(html, /<ha-icon icon="mdi:gas-cylinder"><\/ha-icon>/);
-    assert.match(html, /class="mini-cylinder"/);
+    assert.match(html, /class="mini-cylinder normal"/);
+    assert.match(html, /class="mini-brand-logo"><img src="data:image[/]png;base64,/);
     assert.equal(card.getGridOptions().columns,12);
     assert.equal(card.getCardSize(),1);
   }
@@ -1077,4 +1080,55 @@ test('real card keeps Recorder attribution in history', async () => {
   await Promise.resolve();
   assert.match(card.shadowRoot.innerHTML,/Historiken hämtas från Home Assistant Recorder/);
   assert.equal(card.shadowRoot.innerHTML.includes('Simulerad historik'),false);
+});
+
+test('Mini gas-cylinder background follows gas level, threshold and unknown state', async () => {
+  const scenarios=[
+    {level:92,expected:'normal'},
+    {level:19,expected:'warn'},
+    {level:10,expected:'bad'},
+    {level:4,expected:'bad'},
+    {level:'unknown',expected:'neutral'},
+    {level:-3,expected:'neutral'},
+    {level:101,expected:'neutral'}
+  ];
+  for(const {level,expected} of scenarios){
+    const states=makeStates();
+    states['sensor.'+base+'_gas_level']=entity('gas_level',level);
+    const card=new Card();card.setConfig({size:'mini',language:'sv'});
+    card.hass={states,language:'sv'};
+    await Promise.resolve();
+    const html=card.shadowRoot.innerHTML;
+    assert.equal(card._cylinderSeverity(),expected,String(level));
+    assert.ok(html.includes('class="mini-cylinder '+expected+'"'),String(level));
+    assert.match(html,/class="mini-brand-logo"><img src="data:image[/]png;base64,/);
+  }
+});
+
+test('Mini honors integration low_gas warning threshold even above 10%', async () => {
+  const states=makeStates();
+  states['sensor.'+base+'_gas_level']=entity('gas_level',17);
+  states['binary_sensor.'+base+'_low_gas']={entity_id:'binary_sensor.'+base+'_low_gas',state:'on'};
+  const card=new Card();card.setConfig({size:'mini',language:'sv'});
+  card.hass={states,language:'sv'};
+  await Promise.resolve();
+  assert.equal(card._cylinderSeverity(),'bad');
+  assert.match(card.shadowRoot.innerHTML,/class="mini-cylinder bad"/);
+});
+
+test('Mini keeps both icons with Plus warning and when quick actions are enabled', async () => {
+  const card=new Card();
+  card.setConfig({size:'mini',demo_mode:'plus_warning',show_actions:true,language:'sv'});
+  card.hass={states:{},language:'sv'};
+  await Promise.resolve();
+  const html=card.shadowRoot.innerHTML;
+  assert.match(html,/class="mini-brand-logo"><img src="data:image[/]png;base64,/);
+  assert.match(html,/class="mini-cylinder normal"/);
+  assert.match(html,/PLUS !/);
+  assert.match(html,/class="mini-shell with-actions"/);
+  assert.match(html,/class="mini-action /);
+  assert.match(html,/\\.mini-shell\\.with-actions\\{grid-template-columns:86px/);
+  assert.match(html,/@media\\(max-width:300px\\)/);
+  assert.equal(card.getGridOptions().columns,12);
+  assert.equal(card.getCardSize(),1);
 });
