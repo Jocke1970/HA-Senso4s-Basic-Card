@@ -415,7 +415,7 @@ test('both embedded Swedish and English translation dictionaries remain synchron
   const translations = JSON.parse(match[1]);
   const sv = Object.keys(translations.sv).sort();
   const en = Object.keys(translations.en).sort();
-  assert.equal(sv.length, 66);
+  assert.equal(sv.length, 83);
   assert.deepEqual(sv, en);
   for (const key of sv) {
     assert.ok(translations.sv[key].trim(), 'Swedish: ' + key);
@@ -427,7 +427,7 @@ test('both embedded Swedish and English translation dictionaries remain synchron
     assert.ok(translations.sv[key], key + ' Swedish');
     assert.ok(translations.en[key], key + ' English');
   }
-  assert.match(js, /VERSION="0\.1\.4b1"/);
+  assert.match(js, /VERSION="0\.1\.5b1"/);
 });
 
 test('show_history and show_diagnostics default to true for existing dashboards', async () => {
@@ -438,7 +438,7 @@ test('show_history and show_diagnostics default to true for existing dashboards'
   const html = card.shadowRoot.innerHTML;
   assert.match(html, /data-toggle="history"/);
   assert.match(html, /data-toggle="diag"/);
-  assert.match(html, /Senso4s Basic · 0\.1\.4b1/);
+  assert.match(html, /Senso4s Basic · 0\.1\.5b1/);
   assert.equal(card.getCardSize(), 6);
 });
 
@@ -848,4 +848,152 @@ test('branding update preserves read-only semantics and mini width', () => {
   assert.equal(card.getGridOptions().columns,12);
   assert.equal(js.includes('callService('),false);
   assert.equal(js.includes('BRAND_ICON'),true);
+});
+
+test('real Plus model is detected from usage_mode even with all optional anomaly entities disabled', async () => {
+  const states=makeStates();
+  states['sensor.'+base+'_usage_mode']=entity('usage_mode','Caravanning',{is_plus_model:true});
+  const card=new Card();card.setConfig({language:'sv'});
+  card.hass={states,language:'sv'};
+  await Promise.resolve();
+  assert.equal(card._model(),'plus');
+  assert.match(card.shadowRoot.innerHTML,/Senso4s Plus/);
+  card._diagOpen=true;card._schedule();await Promise.resolve();
+  const html=card.shadowRoot.innerHTML;
+  assert.match(html,/Plus-diagnostik/);
+  assert.match(html,/Temperaturavvikelse/);
+  assert.match(html,/Lutningsavvikelse/);
+  assert.match(html,/Rörelseavvikelse/);
+  assert.match(html,/Ej aktiverad \/ saknar värde/);
+  assert.match(html,/en eller flera anomalisensorer är avaktiverade/);
+  assert.equal(html.includes('Plus-enheten rapporterar en avvikelse'),false);
+});
+
+test('Plus detection falls back to HA device registry when usage_mode is disabled', async () => {
+  const states=makeStates();
+  const id='sensor.'+base+'_gas_remaining';
+  const card=new Card();card.setConfig({language:'en'});
+  card.hass={
+    states,language:'en',
+    entities:{[id]:{entity_id:id,device_id:'plus-device-1'}},
+    devices:{'plus-device-1':{id:'plus-device-1',model:'Senso4s PLUS'}}
+  };
+  await Promise.resolve();
+  assert.equal(card._model(),'plus');
+  assert.match(card.shadowRoot.innerHTML,/Senso4s Plus/);
+  card._diagOpen=true;card._schedule();await Promise.resolve();
+  assert.match(card.shadowRoot.innerHTML,/This device supports Plus features/);
+});
+
+test('explicit Basic flag takes priority over other guesses', async () => {
+  const states=makeStates();
+  states['sensor.'+base+'_usage_mode']=entity('usage_mode','Heating',{is_plus_model:false});
+  const card=new Card();card.setConfig({});
+  card.hass={states,language:'sv'};
+  await Promise.resolve();
+  assert.equal(card._model(),'basic');
+  card._diagOpen=true;card._schedule();await Promise.resolve();
+  assert.equal(card.shadowRoot.innerHTML.includes('Plus-diagnostik'),false);
+});
+
+test('synthetic Plus preview renders realistic mass and diagnostics without real HA entities', async () => {
+  const states=makeStates(),count=Object.keys(states).length;
+  const card=new Card();card.setConfig({language:'sv',demo_mode:'plus'});
+  card.hass={states,language:'sv',callApi:()=>{throw Error('No HA call allowed in demo');}};
+  await Promise.resolve();
+  assert.equal(card._model(),'plus');
+  assert.match(card.shadowRoot.innerHTML,/DEMO – fiktiv enhet/);
+  assert.match(card.shadowRoot.innerHTML,/6,80 kg/);
+  assert.match(card.shadowRoot.innerHTML,/Senso4s Plus/);
+  assert.equal(Object.keys(states).length,count);
+  assert.equal(Object.keys(states).some(x=>x.includes('_demo_')),false);
+  card._diagOpen=true;card._schedule();await Promise.resolve();
+  const html=card.shadowRoot.innerHTML;
+  assert.match(html,/Plus-diagnostik/);
+  assert.match(html,/Rörelseavvikelse/);
+  assert.equal(html.includes('Ej aktiverad / saknar värde'),false);
+});
+
+test('synthetic Plus tilt warning highlights the actual anomaly', async () => {
+  const card=new Card();card.setConfig({language:'en',demo_mode:'plus_warning'});
+  card.hass={states:{},language:'en'};
+  await Promise.resolve();card._diagOpen=true;card._schedule();await Promise.resolve();
+  const html=card.shadowRoot.innerHTML;
+  assert.match(html,/Plus scale reports an anomaly/);
+  assert.match(html,/class="status warn"/);
+  const index=html.indexOf('Tilt anomaly');
+  assert.ok(index>0);
+  assert.match(html.slice(index,index+300),/class="diag-visual bad"/);
+  assert.match(html.slice(index,index+300),/mdi:angle-acute/);
+});
+
+test('Plus with disabled entities remains Plus and unavailable is never shown green', async () => {
+  const card=new Card();card.setConfig({language:'sv',demo_mode:'plus_disabled'});
+  card.hass={states:{},language:'sv'};
+  await Promise.resolve();card._diagOpen=true;card._schedule();await Promise.resolve();
+  const html=card.shadowRoot.innerHTML;
+  assert.equal(card._model(),'plus');
+  assert.match(html,/Plus-diagnostik/);
+  assert.match(html,/Ej aktiverad \/ saknar värde/);
+  const i=html.indexOf('Temperaturavvikelse');
+  assert.match(html.slice(i,i+320),/class="diag-visual neutral"/);
+  assert.equal(html.includes('Plus-enheten rapporterar en avvikelse'),false);
+});
+
+test('synthetic Basic preview has no Plus badge or Plus diagnostic section', async () => {
+  const card=new Card();card.setConfig({language:'sv',demo_mode:'basic'});
+  card.hass={states:{},language:'sv'};
+  await Promise.resolve();card._diagOpen=true;card._schedule();await Promise.resolve();
+  assert.equal(card._model(),'basic');
+  assert.match(card.shadowRoot.innerHTML,/Senso4s Basic/);
+  assert.equal(card.shadowRoot.innerHTML.includes('Plus-diagnostik'),false);
+  assert.match(card.shadowRoot.innerHTML,/DEMO – fiktiv enhet/);
+});
+
+test('synthetic demo history never calls Home Assistant Recorder', async () => {
+  let requests=0;
+  const card=new Card();card.setConfig({language:'sv',demo_mode:'plus'});
+  card.hass={states:{},language:'sv',callApi:async()=>{requests++;throw Error('Forbidden');}};
+  await Promise.resolve();
+  await card._loadHistory();
+  await Promise.resolve();
+  assert.equal(requests,0);
+  assert.equal(card._history.length,3);
+  assert.match(card._chart(),/stroke-width="3"/);
+  assert.equal(card._history[0].length,9);
+});
+
+test('Mini Plus preview stays one row and marks Plus warning', async () => {
+  const card=new Card();card.setConfig({size:'mini',language:'sv',demo_mode:'plus_warning'});
+  card.hass={states:{},language:'sv'};
+  await Promise.resolve();
+  const html=card.shadowRoot.innerHTML;
+  assert.match(html,/mini-weight-wrap/);
+  assert.match(html,/mini-plus warn/);
+  assert.match(html,/PLUS !/);
+  assert.match(html,/DEMO – fiktiv enhet/);
+  assert.equal(card.getCardSize(),1);
+  assert.equal(card.getGridOptions().columns,12);
+});
+
+test('editor exposes synthetic Basic/Plus scenarios without losing card settings', () => {
+  const editor=new Editor();
+  editor.setConfig({size:'mini',language:'sv',show_actions:false});
+  editor.hass={states:makeStates(),language:'sv'};
+  const html=editor.shadowRoot.innerHTML;
+  assert.match(html,/data-field="demo_mode"/);
+  assert.match(html,/Simulerad Plus \(normal\)/);
+  assert.match(html,/extrasensorer avstängda/);
+  editor._handleChange({target:{dataset:{field:'demo_mode'},type:'select-one',value:'plus_disabled'}});
+  const config=editor.events.at(-1).detail.config;
+  assert.equal(config.demo_mode,'plus_disabled');
+  assert.equal(config.size,'mini');
+  assert.equal(config.show_actions,false);
+});
+
+test('invalid demo modes cannot accidentally enable synthetic data', () => {
+  const card=new Card();
+  assert.throws(()=>card.setConfig({demo_mode:'true'}),/invalid demo_mode/);
+  assert.throws(()=>card.setConfig({demo_mode:true}),/invalid demo_mode/);
+  assert.throws(()=>card.setConfig({demo_mode:'plus_special'}),/invalid demo_mode/);
 });
