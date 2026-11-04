@@ -409,25 +409,25 @@ test('diagnostic panel has a symmetric two-by-two grid with icons below labels',
   assert.ok(html.includes('font-size:13px;font-weight:700;text-align:center'));
 });
 
-test('both embedded Swedish and English translation dictionaries remain synchronized', () => {
-  const match = js.match(/const L=(\{[\s\S]*?\});\s*const CSS=/);
-  assert.ok(match, 'embedded Swedish/English translation object exists');
-  const translations = JSON.parse(match[1]);
-  const sv = Object.keys(translations.sv).sort();
-  const en = Object.keys(translations.en).sort();
-  assert.equal(sv.length, 85);
-  assert.deepEqual(sv, en);
-  for (const key of sv) {
-    assert.ok(translations.sv[key].trim(), 'Swedish: ' + key);
-    assert.ok(translations.en[key].trim(), 'English: ' + key);
+test('bundled translations contain synchronized Swedish, English, Spanish and Finnish dictionaries', () => {
+  const match=js.match(/const L=(\\{[\\s\\S]*?\\});\\s*const LOCALES=/);
+  assert.ok(match,'generated translation dictionary exists');
+  const dictionaries=JSON.parse(match[1]);
+  const en=Object.keys(dictionaries.en).sort();
+  for(const locale of ['en','sv','es','fi']){
+    assert.deepEqual(Object.keys(dictionaries[locale]).sort(),en,locale);
+    for(const key of en)assert.ok(dictionaries[locale][key].trim(),locale+'.'+key);
   }
-  for (const key of ['mode', 'errorTitle', 'calibrationTitle', 'lowTitle',
-                     'estimatedEmpty', 'refillTank', 'recalibrateScale',
-                     'settingsOnly', 'comingLater', 'modeHeating']) {
-    assert.ok(translations.sv[key], key + ' Swedish');
-    assert.ok(translations.en[key], key + ' English');
+  assert.match(js,/VERSION="0\\.1\\.5b5"/);
+});
+
+test('Spanish, Finnish and fallback locales render without mixing languages', async () => {
+  for(const [language,label] of [['es-ES','Gas restante'],['fi-FI','Kaasua jäljellä'],['zh-CN','Gas remaining'],['el-GR','Gas remaining']]){
+    const card=new Card();card.setConfig({language:'auto'});
+    card.hass={states:makeStates(),language};
+    await Promise.resolve();
+    assert.ok(card.shadowRoot.innerHTML.includes(label),language);
   }
-  assert.match(js, /VERSION="0\.1\.5b4"/);
 });
 
 test('show_history and show_diagnostics default to true for existing dashboards', async () => {
@@ -935,17 +935,33 @@ test('synthetic Plus tilt warning highlights the actual anomaly', async () => {
   assert.match(html.slice(index,index+300),/mdi:angle-acute/);
 });
 
-test('Plus with disabled entities remains Plus and unavailable is never shown green', async () => {
+test('Plus with all optional sensors disabled hides diagnostic tiles', async () => {
   const card=new Card();card.setConfig({language:'sv',demo_mode:'plus_disabled'});
   card.hass={states:{},language:'sv'};
   await Promise.resolve();card._diagOpen=true;card._schedule();await Promise.resolve();
   const html=card.shadowRoot.innerHTML;
   assert.equal(card._model(),'plus');
-  assert.match(html,/Plus-diagnostik/);
-  assert.match(html,/Ej aktiverad \/ saknar värde/);
-  const i=html.indexOf('Temperaturavvikelse');
-  assert.match(html.slice(i,i+320),/class="diag-visual neutral"/);
+  assert.match(html,/Plus-diagnostik är avaktiverad/);
+  assert.equal(html.includes('class="plus-heading"'),false);
+  assert.equal(html.includes('Temperaturavvikelse'),false);
+  assert.equal(html.includes('Lutningsavvikelse'),false);
   assert.equal(html.includes('Plus-enheten rapporterar en avvikelse'),false);
+});
+
+test('Plus explicitly unavailable sensor reports Problem, not healthy or disabled', async () => {
+  const card=new Card();card.setConfig({language:'sv',demo_mode:'plus_unavailable'});
+  card.hass={states:{},language:'sv'};
+  await Promise.resolve();card._diagOpen=true;card._schedule();await Promise.resolve();
+  const html=card.shadowRoot.innerHTML;
+  assert.match(html,/class="status warn">Problem/);
+  assert.match(html,/En eller flera Plus-sensorer är otillgängliga/);
+  const index=html.indexOf('Temperaturavvikelse');
+  assert.ok(index>0);
+  assert.match(html.slice(index,index+400),/class="diag-visual bad"/);
+  assert.match(html.slice(index,index+400),/mdi:alert-circle/);
+  const mini=new Card();mini.setConfig({language:'en',size:'mini',demo_mode:'plus_unavailable'});
+  mini.hass={states:{},language:'en'};await Promise.resolve();
+  assert.match(mini.shadowRoot.innerHTML,/PLUS \\?/);
 });
 
 test('synthetic Basic preview has no Plus badge or Plus diagnostic section', async () => {

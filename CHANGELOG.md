@@ -1,5 +1,14 @@
 # Changelog
 
+## 0.1.5b5 — 2026-11-04 (dev translations and Plus diagnostics)
+
+- Move translations into separate English, Swedish, Spanish and Finnish JSON sources, bundle into one HACS JS file with reproducible Node build
+- Add locale selection for sv/en/es/fi, automatic HA locale fallback to English, and language-key consistency checks
+- Hide genuinely disabled Plus anomaly sensors, show actionable Problem messages for explicitly unavailable sensors, keep unknown states neutral
+- Add simulated Plus unavailable scenario; update editor and regression tests
+- Dev only; beta/main unchanged until live visual review
+
+
 ## 0.1.5b4 — 2026-11-04 (dev Mini dual-brand and dynamic gas-color fix)
 
 - Restore **both icons** in Mini: original SENSO logo beside the gas-cylinder pictogram

@@ -4,6 +4,14 @@ A standalone, read-only Home Assistant Lovelace card for **Senso4s Basic and Plu
 
 **Stable release: 0.1.3 (2026-11-03).** Native Home Assistant visual configuration, Swedish/English UI, matching Mini/Standard default widths and optional **disabled** quick-action placeholders. Real refill and calibration operations are not yet implemented.
 
+## Development preview — 0.1.5b5 diagnostic states and multi-language source files
+
+**Dev only; beta and main remain unchanged.** Plus diagnostics hide disabled/missing optional entities, show **Problem** with a clear explanation for entities explicitly marked `unavailable`, and show neutral unknown indicators for active entities in state `unknown`. An entirely disabled Plus diagnostics set displays a short localized explanation instead of four empty tiles. The visual editor adds a synthetic `plus_unavailable` scenario.
+
+Translations are maintained in `translations/en.json`, `sv.json`, `es.json`, and `fi.json`. Run `node scripts/build.mjs` to generate the existing one-file `senso4s-basic-card.js` HACS resource. The generated resource is **committed**; CI runs `node scripts/build.mjs --check` to prevent drift. The build requires Node.js 18+ (no extra dependencies). Existing `custom:senso4s-basic-card`, dashboard YAML and `/local/senso4s-basic-card.js` remain unchanged. `language: auto` respects supported HA locales and falls back to English for others (including Greek and Chinese until translated). Use `language: es` or `fi` to override.
+
+Test the new Plus unavailable and disabled scenarios visually in Home Assistant before promoting dev to beta.
+
 ## Development preview — 0.1.5b4 Basic / Plus + simulated scale
 
 **Status: dev only; the updated Mini layout still needs visual confirmation in Home Assistant.** The stable release on `main` is still 0.1.3. This is a read-only frontend build; it does not call Senso4s services or alter any real cylinder's values.
