@@ -415,7 +415,7 @@ test('both embedded Swedish and English translation dictionaries remain synchron
   const translations = JSON.parse(match[1]);
   const sv = Object.keys(translations.sv).sort();
   const en = Object.keys(translations.en).sort();
-  assert.equal(sv.length, 83);
+  assert.equal(sv.length, 84);
   assert.deepEqual(sv, en);
   for (const key of sv) {
     assert.ok(translations.sv[key].trim(), 'Swedish: ' + key);
@@ -996,4 +996,36 @@ test('invalid demo modes cannot accidentally enable synthetic data', () => {
   assert.throws(()=>card.setConfig({demo_mode:'true'}),/invalid demo_mode/);
   assert.throws(()=>card.setConfig({demo_mode:true}),/invalid demo_mode/);
   assert.throws(()=>card.setConfig({demo_mode:'plus_special'}),/invalid demo_mode/);
+});
+
+test('one active Plus anomaly triggers warning even if overall anomaly entity is disabled', async () => {
+  const states=makeStates();
+  states['sensor.'+base+'_usage_mode']=entity('usage_mode','Caravanning',{is_plus_model:true});
+  states['binary_sensor.'+base+'_incline_anomaly']={entity_id:'binary_sensor.'+base+'_incline_anomaly',state:'on'};
+  const card=new Card();card.setConfig({language:'sv'});
+  card.hass={states,language:'sv'};
+  await Promise.resolve();
+  assert.equal(card._plusAlert(),true);
+  assert.match(card.shadowRoot.innerHTML,/class="status warn"/);
+  assert.match(card.shadowRoot.innerHTML,/Avvikelse/);
+  assert.match(card.shadowRoot.innerHTML,/Plus-enheten rapporterar en avvikelse/);
+  card._diagOpen=true;card._schedule();await Promise.resolve();
+  const i=card.shadowRoot.innerHTML.indexOf('Lutningsavvikelse');
+  assert.ok(i>=0);
+  assert.match(card.shadowRoot.innerHTML.slice(i,i+320),/class="diag-visual bad"/);
+  const mini=new Card();mini.setConfig({size:'mini',language:'sv'});
+  mini.hass={states,language:'sv'};
+  await Promise.resolve();
+  assert.match(mini.shadowRoot.innerHTML,/PLUS !/);
+});
+
+test('editor stores demo mode separately from real scale selection and can switch it off', () => {
+  const editor=new Editor();
+  editor.setConfig({entity:'sensor.'+base+'_gas_remaining',demo_mode:'plus'});
+  assert.match(editor.shadowRoot.innerHTML,/data-real-entity/);
+  assert.match(editor.shadowRoot.innerHTML,/data-field="demo_mode"/);
+  editor._handleChange({target:{dataset:{field:'demo_mode'},type:'select-one',value:'off'}});
+  const cfg=editor.events.at(-1).detail.config;
+  assert.equal(cfg.demo_mode,'off');
+  assert.equal(cfg.entity,'sensor.'+base+'_gas_remaining');
 });
