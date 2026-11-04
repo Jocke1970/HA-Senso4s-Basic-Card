@@ -427,7 +427,7 @@ test('both embedded Swedish and English translation dictionaries remain synchron
     assert.ok(translations.sv[key], key + ' Swedish');
     assert.ok(translations.en[key], key + ' English');
   }
-  assert.match(js, /VERSION="0\.1\.5b1"/);
+  assert.match(js, /VERSION="0\.1\.5b2"/);
 });
 
 test('show_history and show_diagnostics default to true for existing dashboards', async () => {
@@ -438,7 +438,7 @@ test('show_history and show_diagnostics default to true for existing dashboards'
   const html = card.shadowRoot.innerHTML;
   assert.match(html, /data-toggle="history"/);
   assert.match(html, /data-toggle="diag"/);
-  assert.match(html, /Senso4s Basic · 0\.1\.5b1/);
+  assert.match(html, /Senso4s Basic · 0\.1\.5b2/);
   assert.equal(card.getCardSize(), 6);
 });
 
@@ -826,19 +826,25 @@ test('original SENSO brand icon is bundled into standalone JS as PNG data', () =
   assert.equal(js.includes('cdn.'),false);
 });
 
-test('SENSO icon is displayed in both Standard header and Mini without additional assets', async () => {
+test('SENSO brand remains in Standard header and original gas cylinder is restored in Mini', async () => {
   for(const size of ['standard','mini']){
     const card=new Card();
     card.setConfig({size,show_actions:size==='mini'});
     card.hass={states:makeStates(),language:'sv'};
     await Promise.resolve();
     const html=card.shadowRoot.innerHTML;
-    assert.match(html,/alt="Senso4s"/);
-    assert.match(html,/src="data:image[/]png;base64,/);
-    assert.equal(html.includes('icon="mdi:gas-cylinder"'),false);
+    if(size==='mini'){
+      assert.match(html,/class="mini-cylinder" role="img"/);
+      assert.match(html,/icon="mdi:gas-cylinder"/);
+      assert.equal(html.includes('<img src="data:image/png;base64,'),false);
+      assert.equal(html.includes('class="logo"'),false);
+    }else{
+      assert.match(html,/class="logo"><img src="data:image[/]png;base64,/);
+      assert.match(html,/alt="Senso4s"/);
+      assert.equal(html.includes('class="mini-cylinder"'),false);
+    }
     assert.equal(html.includes('http://'),false);
     assert.equal(html.includes('https://'),false);
-    assert.ok(html.includes(size==='mini'?'class="mini-cylinder"':'class="logo"'));
   }
 });
 
@@ -1028,4 +1034,18 @@ test('editor stores demo mode separately from real scale selection and can switc
   const cfg=editor.events.at(-1).detail.config;
   assert.equal(cfg.demo_mode,'off');
   assert.equal(cfg.entity,'sensor.'+base+'_gas_remaining');
+});
+
+test('Mini cylinder icon works for Basic, Plus, and every synthetic preview', async () => {
+  for(const demo_mode of ['off','basic','plus','plus_warning','plus_disabled']){
+    const card=new Card();
+    card.setConfig({size:'mini',demo_mode});
+    card.hass={states:demo_mode==='off'?makeStates():{},language:'sv'};
+    await Promise.resolve();
+    const html=card.shadowRoot.innerHTML;
+    assert.match(html, /<ha-icon icon="mdi:gas-cylinder"><\/ha-icon>/);
+    assert.match(html, /class="mini-cylinder"/);
+    assert.equal(card.getGridOptions().columns,12);
+    assert.equal(card.getCardSize(),1);
+  }
 });
