@@ -415,7 +415,7 @@ test('both embedded Swedish and English translation dictionaries remain synchron
   const translations = JSON.parse(match[1]);
   const sv = Object.keys(translations.sv).sort();
   const en = Object.keys(translations.en).sort();
-  assert.equal(sv.length, 84);
+  assert.equal(sv.length, 85);
   assert.deepEqual(sv, en);
   for (const key of sv) {
     assert.ok(translations.sv[key].trim(), 'Swedish: ' + key);
@@ -427,7 +427,7 @@ test('both embedded Swedish and English translation dictionaries remain synchron
     assert.ok(translations.sv[key], key + ' Swedish');
     assert.ok(translations.en[key], key + ' English');
   }
-  assert.match(js, /VERSION="0\.1\.5b2"/);
+  assert.match(js, /VERSION="0\.1\.5b3"/);
 });
 
 test('show_history and show_diagnostics default to true for existing dashboards', async () => {
@@ -438,7 +438,7 @@ test('show_history and show_diagnostics default to true for existing dashboards'
   const html = card.shadowRoot.innerHTML;
   assert.match(html, /data-toggle="history"/);
   assert.match(html, /data-toggle="diag"/);
-  assert.match(html, /Senso4s Basic · 0\.1\.5b2/);
+  assert.match(html, /Senso4s Basic · 0\.1\.5b3/);
   assert.equal(card.getCardSize(), 6);
 });
 
@@ -1048,4 +1048,33 @@ test('Mini cylinder icon works for Basic, Plus, and every synthetic preview', as
     assert.equal(card.getGridOptions().columns,12);
     assert.equal(card.getCardSize(),1);
   }
+});
+
+test('demo history labels generated data and never attributes it to Recorder', async () => {
+  for (const [language,expected] of [['sv','Simulerad historik'],['en','Simulated history']]) {
+    const card=new Card();
+    card.setConfig({language,demo_mode:'plus'});
+    let called=0;
+    card.hass={states:{},language,callApi:async()=>{called++;throw Error('Unexpected Recorder access');}};
+    await Promise.resolve();
+    card._historyOpen=true;
+    await card._loadHistory();
+    await Promise.resolve();
+    const html=card.shadowRoot.innerHTML;
+    assert.match(html,new RegExp(expected));
+    assert.equal(html.includes('Historiken hämtas från Home Assistant Recorder.'),false);
+    assert.equal(html.includes('History comes from Home Assistant Recorder.'),false);
+    assert.equal(called,0);
+  }
+});
+test('real card keeps Recorder attribution in history', async () => {
+  const card=new Card();
+  card.setConfig({language:'sv'});
+  card.hass={states:makeStates(),language:'sv'};
+  await Promise.resolve();
+  card._historyOpen=true;
+  card._schedule();
+  await Promise.resolve();
+  assert.match(card.shadowRoot.innerHTML,/Historiken hämtas från Home Assistant Recorder/);
+  assert.equal(card.shadowRoot.innerHTML.includes('Simulerad historik'),false);
 });
