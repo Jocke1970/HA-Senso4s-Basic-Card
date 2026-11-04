@@ -550,7 +550,7 @@ test('mini is a single-row Mushroom-style display with only the requested data',
   const html=card.shadowRoot.innerHTML;
   assert.match(html, /<ha-card class="mini-card"/);
   assert.match(html, /class="mini-cylinder"/);
-  assert.match(html, /<img src="data:image\/png;base64,/);
+  assert.match(html, /<ha-icon icon="mdi:gas-cylinder"><\/ha-icon>/);
   assert.match(html, /class="mini-weight"[^>]*>9,50 kg<\/div>/);
   assert.match(html, /class="mini-signals"/);
   assert.match(html, /class="mini-status good" role="img" aria-label="Batteri"/);
