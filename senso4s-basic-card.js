@@ -160,7 +160,7 @@ class Senso4sBasicCard extends HTMLElement {
     this._config={title:"",entity:"",language:"auto",history_hours:168,show_history:true,show_diagnostics:true,size:"standard",demo_mode:"off"};
     this._historyOpen=false;this._diagOpen=false;this._view="gas_remaining";
     this._history=[];this._loaded=false;this._loading=false;this._error="";
-    this._generation=0;this._scheduled=false;
+    this._generation=0;this._scheduled=false;this._demoCache=null;this._demoCacheMode=null;
   }
   static getStubConfig(){return {};}
   static getConfigElement(){return document.createElement("senso4s-basic-card-editor");}
@@ -176,7 +176,7 @@ class Senso4sBasicCard extends HTMLElement {
     if(this._config.show_actions!==undefined&&typeof this._config.show_actions!=="boolean")throw new Error("show_actions must be a boolean value (true/false)");
     this._config.history_hours=Math.max(1,Math.min(720,Number(this._config.history_hours)||168));
     if(!["auto","sv","en"].includes(this._config.language))this._config.language="auto";
-    if(JSON.stringify(this._config)!==previous){this._loaded=false;this._loading=false;this._history=[];this._generation++;}
+    if(JSON.stringify(this._config)!==previous){this._loaded=false;this._loading=false;this._history=[];this._generation++;this._demoCache=null;this._demoCacheMode=null;}
     this._schedule();
   }
   set hass(hass){
@@ -188,8 +188,34 @@ class Senso4sBasicCard extends HTMLElement {
   _lang(){return this._config.language!=="auto"?this._config.language:String(this._hass?.language||"en").toLowerCase().startsWith("sv")?"sv":"en";}
   _t(key){return L[this._lang()][key]||key;}
   _esc(v){return String(v??"").replaceAll("&","&amp;").replaceAll("<","&lt;").replaceAll(">","&gt;").replaceAll('"',"&quot;").replaceAll("'","&#39;");}
-  _candidates(){return Object.keys(this._hass?.states||{}).filter(id=>/^sensor\.senso4s_.+_gas_remaining$/.test(id)).sort();}
+  // Developer preview: all synthetic data lives inside this card, never in HA.
+  _isDemo(){return this._config.demo_mode!=="off";}
+  _states(){
+    if(!this._isDemo())return this._hass?.states||{};
+    const mode=this._config.demo_mode;
+    if(this._demoCacheMode===mode&&this._demoCache)return this._demoCache;
+    const plus=mode!=="basic",prefix="senso4s_demo_"+(plus?"plus":"basic");
+    const now=new Date(),seen=now.toISOString(),changed=new Date(now.getTime()-18*60000).toISOString();
+    const empty=new Date(now.getTime()+38*86400000).toISOString(),states={};
+    const add=(kind,key,value,attributes={})=>{
+      const id=kind+"."+prefix+"_"+key;
+      states[id]={entity_id:id,state:String(value),attributes,last_changed:changed,last_updated:seen};
+    };
+    add("sensor","gas_remaining",6.8);add("sensor","gas_level",68);
+    add("sensor","battery",84,{last_seen:seen});add("sensor","signal_strength",-59);
+    add("sensor","usage_mode",plus?"Caravanning":"Heating",{is_plus_model:plus});
+    add("sensor","estimated_empty",empty);add("sensor","gas_capacity",10);
+    for(const key of ["error","needs_calibration","low_gas"])add("binary_sensor",key,"off");
+    if(plus&&mode!=="plus_disabled"){
+      const warning=mode==="plus_warning";
+      for(const key of ["has_anomaly","temperature_anomaly","incline_anomaly","motion_anomaly"])
+        add("binary_sensor",key,warning&&["has_anomaly","incline_anomaly"].includes(key)?"on":"off");
+    }
+    this._demoCacheMode=mode;this._demoCache=states;return states;
+  }
+  _candidates(){return Object.keys(this._states()).filter(id=>/^sensor\.senso4s_.+_gas_remaining$/.test(id)).sort();}
   _prefix(){
+    if(this._isDemo())return "senso4s_demo_"+(this._config.demo_mode==="basic"?"basic":"plus");
     const selected=String(this._config.entity||"").trim();
     if(selected){const n=selected.replace(/^sensor\./,"").replace(/_(gas_remaining|gas_level|battery)$/,"");return /^senso4s_.+/.test(n)?n:null;}
     const list=this._candidates();return list.length===1?list[0].slice(7,-"_gas_remaining".length):null;
@@ -200,9 +226,9 @@ class Senso4sBasicCard extends HTMLElement {
       :key==="error"?[`binary_sensor.${p}_error`,`binary_sensor.${p}_has_error`]
       :["needs_calibration","low_gas","has_anomaly","temperature_anomaly","incline_anomaly","motion_anomaly"].includes(key)?[`binary_sensor.${p}_${key}`]
       :[`sensor.${p}_${key}`];
-    return ids.find(id=>this._hass?.states?.[id])||ids[0];
+    return ids.find(id=>this._states()[id])||ids[0];
   }
-  _state(key){const id=this._id(key);return id?this._hass?.states?.[id]||null:null;}
+  _state(key){const id=this._id(key);return id?this._states()[id]||null:null;}
   _val(key){const s=this._state(key);return s&&!["unknown","unavailable","none",""].includes(s.state)?s.state:null;}
   _number(key){const v=this._val(key);return v!==null&&Number.isFinite(Number(v))?Number(v):null;}
   _display(key,digits=0,unit=""){
@@ -231,6 +257,7 @@ class Senso4sBasicCard extends HTMLElement {
     return {icon:key==="needs_calibration"?"mdi:scale-balance":"mdi:alert-circle",tone:key==="needs_calibration"?"warn":"bad",description:this._t("yes")};
   }
   _model(){
+    if(this._isDemo())return this._config.demo_mode==="basic"?"basic":"plus";
     const usage=this._state("usage_mode")?.attributes?.is_plus_model;
     if(typeof usage==="boolean")return usage?"plus":"basic";
     const entities=this._hass?.entities||{},devices=this._hass?.devices||{};
@@ -269,7 +296,21 @@ class Senso4sBasicCard extends HTMLElement {
   }
   _schedule(){if(this._scheduled)return;this._scheduled=true;Promise.resolve().then(()=>{this._scheduled=false;this._render();});}
   async _loadHistory(){
-    if(!this._config.show_history||!this._hass?.callApi||this._loading||this._loaded)return;
+    if(!this._config.show_history||this._loading||this._loaded)return;
+    if(this._isDemo()){
+      const now=Date.now(),start=now-this._config.history_hours*3600000;
+      const metrics=[["gas_remaining",6.8,.9],["battery",84,5],["rssi",-59,8]];
+      this._history=metrics.map(([key,value,range])=>{
+        const id=this._id(key);
+        return Array.from({length:9},(_,i)=>({
+          entity_id:id,
+          state:String(key==="gas_remaining"?(value+range*(1-i/8)).toFixed(1):Math.round(value+range*(1-i/8))),
+          last_changed:new Date(start+(now-start)*i/8).toISOString()
+        }));
+      });
+      this._loaded=true;this._error="";this._schedule();return;
+    }
+    if(!this._hass?.callApi)return;
     const ids=["gas_remaining","battery","rssi"].map(x=>this._id(x)).filter(id=>id&&this._hass.states[id]);
     if(!ids.length){this._loaded=true;return;}
     const token=++this._generation;this._loading=true;this._error="";this._schedule();
