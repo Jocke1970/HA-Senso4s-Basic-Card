@@ -14,7 +14,8 @@ The same custom element, `custom:senso4s-basic-card`, now auto-detects **Basic**
 - Fallback: the selected scale's Home Assistant entity/device registry model, `Senso4s BASIC` or `Senso4s PLUS`.
 - Optional Plus anomaly sensors are **not used to decide whether a device is Plus**; model recognition still works if they are disabled.
 - Plus Standard diagnostics expand to four extra indicators: overall anomaly, temperature anomaly, tilt anomaly and motion anomaly. Disabled/missing entities are shown as **unknown/disabled**, never green/healthy.
-- Plus Mini remains a compact row, with a small `PLUS` label (`PLUS !` when the aggregate anomaly entity reports `on`).
+- Plus Mini remains a compact row, with a small `PLUS` label (`PLUS !` when the aggregate **or any individual** anomaly entity reports `on`).
+- Plus warnings are visible even if the aggregate anomaly entity is disabled, as long as an individual anomaly entity reports `on`.
 - The Standard header title automatically changes to `Senso4s Plus` if no custom title was supplied. Existing custom titles are preserved.
 - SENSO logo, Swedish/English translations, current Basic view, history charts, and disabled Refill/Calibration placeholders are retained.
 
@@ -44,7 +45,7 @@ Test data (e.g., 6.80 kg gas remaining and 84% battery), dates and histories liv
 
 To visually test the `dev` version, install/update [senso4s-basic-card.js from dev](https://github.com/Jocke1970/HA-Senso4s-Basic-Card/blob/dev/senso4s-basic-card.js) at `/config/www/senso4s-basic-card.js` and keep your existing resource at `/local/senso4s-basic-card.js`. Refresh the browser cache. Do not use this pre-release for production monitoring.
 
-**Validation so far:** JavaScript syntax checks and 63 frontend simulation tests passed. Live HA visual confirmation and CI status are separate release gates. Continue `dev → beta → main` only after reviewing Mini, Standard, warning, and disabled-entity states.
+**Validation so far:** JavaScript syntax checks and 65 frontend simulation tests passed. Live HA visual confirmation and CI status are separate release gates. Continue `dev → beta → main` only after reviewing Mini, Standard, warning, and disabled-entity states.
 
 ## Development preview — 0.1.4b1 original SENSO branding
 
