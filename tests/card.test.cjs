@@ -410,7 +410,7 @@ test('diagnostic panel has a symmetric two-by-two grid with icons below labels',
 });
 
 test('bundled translations contain synchronized Swedish, English, Spanish and Finnish dictionaries', () => {
-  const match=js.match(/const L=(\\{[\\s\\S]*?\\});\\s*const LOCALES=/);
+  const match=js.match(/const L=(\{[\s\S]*?\});\s*const LOCALES=/);
   assert.ok(match,'generated translation dictionary exists');
   const dictionaries=JSON.parse(match[1]);
   const en=Object.keys(dictionaries.en).sort();
@@ -418,7 +418,7 @@ test('bundled translations contain synchronized Swedish, English, Spanish and Fi
     assert.deepEqual(Object.keys(dictionaries[locale]).sort(),en,locale);
     for(const key of en)assert.ok(dictionaries[locale][key].trim(),locale+'.'+key);
   }
-  assert.match(js,/VERSION="0\\.1\\.5b5"/);
+  assert.match(js,/VERSION="0\.1\.5b5"/);
 });
 
 test('Spanish, Finnish and fallback locales render without mixing languages', async () => {
@@ -438,7 +438,7 @@ test('show_history and show_diagnostics default to true for existing dashboards'
   const html = card.shadowRoot.innerHTML;
   assert.match(html, /data-toggle="history"/);
   assert.match(html, /data-toggle="diag"/);
-  assert.match(html, /Senso4s Basic · 0\.1\.5b4/);
+  assert.match(html, /Senso4s Basic · 0\.1\.5b5/);
   assert.equal(card.getCardSize(), 6);
 });
 
@@ -961,7 +961,7 @@ test('Plus explicitly unavailable sensor reports Problem, not healthy or disable
   assert.match(html.slice(index,index+400),/mdi:alert-circle/);
   const mini=new Card();mini.setConfig({language:'en',size:'mini',demo_mode:'plus_unavailable'});
   mini.hass={states:{},language:'en'};await Promise.resolve();
-  assert.match(mini.shadowRoot.innerHTML,/PLUS \\?/);
+  assert.match(mini.shadowRoot.innerHTML,/PLUS \?/);
 });
 
 test('synthetic Basic preview has no Plus badge or Plus diagnostic section', async () => {
