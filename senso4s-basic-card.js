@@ -406,6 +406,7 @@ class Senso4sBasicCard extends HTMLElement {
     if(this._config.size==="mini"){this._renderMini();return;}
     const t=k=>this._esc(this._t(k));
     const list=this._candidates(),p=this._prefix(),weight=this._state("gas_remaining");
+    const model=this._model(),plus=model==="plus",plusAlert=plus&&this._val("has_anomaly")==="on";
     const level=this._number("gas_level"),filled=level===null?0:Math.max(0,Math.min(100,level));
     const seen=this._state("battery")?.attributes?.last_seen;
     const changed=weight?.last_changed;
@@ -414,6 +415,7 @@ class Senso4sBasicCard extends HTMLElement {
     let status=["fresh","good"];
     if(!weight||this._val("gas_remaining")===null)status=["missing","warn"];
     else if(hasError)status=["error","bad"];
+    else if(plusAlert)status=["plusWarning","warn"];
     else if(cal)status=["calibration","warn"];
     else if(Number.isFinite(age)&&age>1800000)status=["stale","warn"];
     else if(!Number.isFinite(age))status=["noTime","warn"];
@@ -424,9 +426,10 @@ class Senso4sBasicCard extends HTMLElement {
     this.shadowRoot.innerHTML=`
 <style>${CSS}</style>
 <ha-card>
- <div class="top"><div class="brand"><div class="logo"><img src="${BRAND_ICON}" alt="Senso4s" loading="eager" decoding="async"></div><div><h2>${this._esc(this._config.title||"Senso4s Basic")}</h2><div class="muted">${t("sub")}</div></div></div><span class="status ${status[1]}">${t(status[0])}</span></div>
+ <div class="top"><div class="brand"><div class="logo"><img src="${BRAND_ICON}" alt="Senso4s" loading="eager" decoding="async"></div><div><h2>${this._esc(this._title())}</h2><div class="muted">${t(plus?"subPlus":"sub")}</div></div></div><span class="status ${status[1]}">${t(status[0])}</span></div>
+ ${this._isDemo()?`<div class="demo-note">${t("demoLabel")}</div>`:""}
  ${!p||!weight?`<div class="alert">${list.length>1?t("multi"):t("noScale")}</div>`:`
- ${hasError||cal||low?`<div class="alert">${[hasError?t("error"):"",cal?t("calibration"):"",low?t("low"):""].filter(Boolean).join(" · ")}</div>`:""}
+ ${hasError||cal||low||plusAlert?`<div class="alert">${[hasError?t("error"):"",cal?t("calibration"):"",low?t("low"):"",plusAlert?t("plusWarning"):""].filter(Boolean).join(" · ")}</div>`:""}
  <div class="hero"><div class="bottle"><div class="handle"></div><div class="neck"></div><div class="body"><div class="fill" style="height:${filled}%"></div><div class="overlay"><ha-icon icon="mdi:fire"></ha-icon><strong>${level===null?"—":Math.round(level)+"%"}</strong></div></div></div>
  <div class="hero-details"><div class="label">${t("weight")}</div><div class="big">${this._display("gas_remaining",2,"kg")}</div>
  <div class="estimate"><ha-icon icon="mdi:calendar-clock"></ha-icon><span>${t("estimatedEmpty")}: <strong>${this._dateOnly(this._val("estimated_empty"))}</strong></span></div>
@@ -448,13 +451,14 @@ class Senso4sBasicCard extends HTMLElement {
  ["calibrationTitle",this._diagIcon("needs_calibration")],
  ["lowTitle",this._diagIcon("low_gas")]
  ].map(([label,value])=>`<div class="diag"><span class="small">${t(label)}</span>${value}</div>`).join("")}</div>
+  ${plus?this._plusDiagnostics():""}
  ${this._actionsVisible()?`<div class="pending-actions" aria-label="${t("plannedActions")}">
    <button type="button" class="pending-btn" disabled title="${t("comingLater")}"><ha-icon icon="mdi:scale-balance"></ha-icon>${t("recalibrateScale")}</button>
    <button type="button" class="pending-btn" disabled title="${t("comingLater")}"><ha-icon icon="mdi:cog-outline"></ha-icon>${t("settingsOnly")}</button>
    <span class="planned-hint">${t("comingLater")}</span>
  </div>`:""}</div>`:""}
  </section>`:""}`}
- ${this._config.show_history||this._config.show_diagnostics?`<footer><span>Senso4s Basic · ${VERSION}</span><span>${t("readOnly")}</span></footer>`:""}
+ ${this._config.show_history||this._config.show_diagnostics?`<footer><span>${plus?"Senso4s Plus":"Senso4s Basic"} · ${VERSION}</span><span>${t("readOnly")}</span></footer>`:""}
 </ha-card>`;
     this.shadowRoot.querySelector('[data-toggle="history"]')?.addEventListener("click",()=>{this._historyOpen=!this._historyOpen;this._schedule();if(this._historyOpen&&!this._loaded)this._loadHistory();});
     this.shadowRoot.querySelector('[data-toggle="diag"]')?.addEventListener("click",()=>{this._diagOpen=!this._diagOpen;this._schedule();});
@@ -465,6 +469,6 @@ class Senso4sBasicCard extends HTMLElement {
 if(!customElements.get("senso4s-basic-card-editor"))customElements.define("senso4s-basic-card-editor",Senso4sBasicCardEditor);
 if(!customElements.get(TAG))customElements.define(TAG,Senso4sBasicCard);
 window.customCards=window.customCards||[];
-if(!window.customCards.some(card=>card.type===TAG))window.customCards.push({type:TAG,name:"Senso4s Basic",description:"Standalone gas cylinder scale card for Home Assistant",preview:false});
-console.info("[Senso4s Basic] "+VERSION);
+if(!window.customCards.some(card=>card.type===TAG))window.customCards.push({type:TAG,name:"Senso4s Basic / Plus",description:"Auto-detecting Basic / Plus gas cylinder scale card for Home Assistant",preview:false});
+console.info("[Senso4s Basic / Plus] "+VERSION);
 })();
