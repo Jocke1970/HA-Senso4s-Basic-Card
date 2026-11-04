@@ -1,5 +1,13 @@
 # Changelog
 
+## 0.1.5b3 — 2026-11-04 (dev demo history correction)
+
+- Distinguish synthetic demonstration history from live Home Assistant Recorder history using Swedish and English labels
+- Keep Recorder attribution unchanged for actual devices; no new HA requests or service calls
+- Add regression checks for both demo and real Recorder labels; 68 simulated checks pass
+- Plus Standard normal/tilt-warning layout visually reviewed from user screenshots; disabled-entity and Mini Plus views still need visual confirmation
+- Still dev only; beta and main unchanged
+
 ## 0.1.5b2 — 2026-11-04 (dev Mini icon regression fix)
 
 - Restore the original blue `mdi:gas-cylinder` icon in Mini; SENSO logo remains in the Standard header
