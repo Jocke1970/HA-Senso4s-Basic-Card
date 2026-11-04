@@ -1,8 +1,50 @@
-# Senso4s Basic Card
+# Senso4s Card (Basic + Plus)
 
-A standalone, read-only Home Assistant Lovelace card for **Senso4s Basic Bluetooth gas cylinder scales**.
+A standalone, read-only Home Assistant Lovelace card for **Senso4s Basic and Plus Bluetooth gas cylinder scales**. The same custom card automatically adapts to the connected model.
 
 **Stable release: 0.1.3 (2026-11-03).** Native Home Assistant visual configuration, Swedish/English UI, matching Mini/Standard default widths and optional **disabled** quick-action placeholders. Real refill and calibration operations are not yet implemented.
+
+## Development preview — 0.1.5b1 Basic / Plus + simulated scale
+
+**Status: dev only; not yet visually tested on a live Home Assistant dashboard.** The stable release on `main` is still 0.1.3. This is a read-only frontend build; it does not call Senso4s services or alter any real cylinder's values.
+
+The same custom element, `custom:senso4s-basic-card`, now auto-detects **Basic** or **Plus** and uses a model-specific UI without changing the saved dashboard entity selector or resource path. Existing Basic cards are backward-compatible.
+
+- Primary model source: `usage_mode` sensor attribute `is_plus_model` (the integration already publishes it).
+- Fallback: the selected scale's Home Assistant entity/device registry model, `Senso4s BASIC` or `Senso4s PLUS`.
+- Optional Plus anomaly sensors are **not used to decide whether a device is Plus**; model recognition still works if they are disabled.
+- Plus Standard diagnostics expand to four extra indicators: overall anomaly, temperature anomaly, tilt anomaly and motion anomaly. Disabled/missing entities are shown as **unknown/disabled**, never green/healthy.
+- Plus Mini remains a compact row, with a small `PLUS` label (`PLUS !` when the aggregate anomaly entity reports `on`).
+- The Standard header title automatically changes to `Senso4s Plus` if no custom title was supplied. Existing custom titles are preserved.
+- SENSO logo, Swedish/English translations, current Basic view, history charts, and disabled Refill/Calibration placeholders are retained.
+
+### Test a fictitious Senso4s without real hardware
+
+Open the card's built-in visual editor and change **Test device (preview only)** to one of the simulated modes. Or temporarily add a separate manual card:
+
+```yaml
+type: custom:senso4s-basic-card
+size: standard
+language: sv
+demo_mode: plus
+show_diagnostics: true
+```
+
+Select `demo_mode` as follows:
+
+| Value | Synthetic model | Expected result |
+|---|---|---|
+| `off` (default) | Real scale | All values come from Home Assistant |
+| `basic` | Basic | Basic layout without Plus diagnostics |
+| `plus` | Plus | Four healthy Plus indicators |
+| `plus_warning` | Plus | An active overall/tilt anomaly with warning styling |
+| `plus_disabled` | Plus | All optional anomaly entities missing; no false-green status |
+
+Test data (e.g., 6.80 kg gas remaining and 84% battery), dates and histories live **only inside this card's JavaScript**. Nothing is written to HA's state or device registry; no real entities are created and no device commands or Recorder requests are made in preview mode. Every preview displays a clear **DEMO** banner. Set `demo_mode: off` or remove the option to return to the real scale.
+
+To visually test the `dev` version, install/update [senso4s-basic-card.js from dev](https://github.com/Jocke1970/HA-Senso4s-Basic-Card/blob/dev/senso4s-basic-card.js) at `/config/www/senso4s-basic-card.js` and keep your existing resource at `/local/senso4s-basic-card.js`. Refresh the browser cache. Do not use this pre-release for production monitoring.
+
+**Validation so far:** JavaScript syntax checks and 63 frontend simulation tests passed. Live HA visual confirmation and CI status are separate release gates. Continue `dev → beta → main` only after reviewing Mini, Standard, warning, and disabled-entity states.
 
 ## Development preview — 0.1.4b1 original SENSO branding
 
@@ -10,7 +52,7 @@ The `dev` branch now embeds a transparent 128 × 128 PNG cropped/cleaned from th
 
 Because the image is embedded in `senso4s-basic-card.js`, no extra `/local/` asset, external URL or new dashboard resource is needed. Use the [dev JS file](https://github.com/Jocke1970/HA-Senso4s-Basic-Card/blob/dev/senso4s-basic-card.js) only for testing; `beta` and stable `main` remain on their previous release until approved.
 
-This is a visual change only. Card size, Section width, data display, translations, disabled Refill/Calibrate placeholders and the read-only guarantees are unchanged. 52 simulated frontend tests pass, but appearance still needs confirmation in Home Assistant.
+This branding-only note applies to 0.1.4b1; the later 0.1.5b1 preview also adds Basic/Plus layouts and the synthetic test scenarios above.
 
 ## Visual card editor — stable 0.1.3
 
