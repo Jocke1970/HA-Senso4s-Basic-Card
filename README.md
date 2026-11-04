@@ -4,7 +4,7 @@ A standalone, read-only Home Assistant Lovelace card for **Senso4s Basic and Plu
 
 **Stable release: 0.1.3 (2026-11-03).** Native Home Assistant visual configuration, Swedish/English UI, matching Mini/Standard default widths and optional **disabled** quick-action placeholders. Real refill and calibration operations are not yet implemented.
 
-## Development preview — 0.1.5b2 Basic / Plus + simulated scale
+## Development preview — 0.1.5b3 Basic / Plus + simulated scale
 
 **Status: dev only; not yet visually tested on a live Home Assistant dashboard.** The stable release on `main` is still 0.1.3. This is a read-only frontend build; it does not call Senso4s services or alter any real cylinder's values.
 
@@ -43,9 +43,11 @@ Select `demo_mode` as follows:
 
 Test data (e.g., 6.80 kg gas remaining and 84% battery), dates and histories live **only inside this card's JavaScript**. Nothing is written to HA's state or device registry; no real entities are created and no device commands or Recorder requests are made in preview mode. Every preview displays a clear **DEMO** banner. Set `demo_mode: off` or remove the option to return to the real scale.
 
+**Demo history label:** In demo mode, the history panel explicitly says that the graph contains synthetic sample data and never claims the values came from Home Assistant Recorder. In real-device mode, the standard Recorder attribution remains.
+
 To visually test the `dev` version, install/update [senso4s-basic-card.js from dev](https://github.com/Jocke1970/HA-Senso4s-Basic-Card/blob/dev/senso4s-basic-card.js) at `/config/www/senso4s-basic-card.js` and keep your existing resource at `/local/senso4s-basic-card.js`. Refresh the browser cache. Do not use this pre-release for production monitoring.
 
-**Validation so far:** JavaScript syntax checks and 66 frontend simulation tests passed. Live HA visual confirmation and CI status are separate release gates. Continue `dev → beta → main` only after reviewing Mini, Standard, warning, and disabled-entity states.
+**Validation so far:** JavaScript syntax checks and 68 frontend simulation tests passed. Live HA visual confirmation and CI status are separate release gates. Continue `dev → beta → main` only after reviewing Mini, Standard, warning, and disabled-entity states.
 
 ## Development preview — 0.1.4b1 original SENSO branding
 
