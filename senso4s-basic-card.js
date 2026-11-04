@@ -1,7 +1,7 @@
-/* Senso4s Basic Lovelace Card v0.1.4b1. MIT license. Read-only. */
+/* Senso4s Basic / Plus Lovelace Card v0.1.5b1. MIT license. Read-only. */
 (()=>{
 "use strict";
-const TAG="senso4s-basic-card", VERSION="0.1.4b1";
+const TAG="senso4s-basic-card", VERSION="0.1.5b1";
 // Source: the user-supplied SENSO original artwork; clean white tile, no AI-generated shadows.
 // Embedded data URI keeps the single-file /local/senso4s-basic-card.js installation working.
 const BRAND_ICON="data:image/png;base64,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";
@@ -157,7 +157,7 @@ class Senso4sBasicCard extends HTMLElement {
   constructor(){
     super();
     this.attachShadow({mode:"open"});
-    this._config={title:"Senso4s Basic",entity:"",language:"auto",history_hours:168,show_history:true,show_diagnostics:true,size:"standard"};
+    this._config={title:"",entity:"",language:"auto",history_hours:168,show_history:true,show_diagnostics:true,size:"standard",demo_mode:"off"};
     this._historyOpen=false;this._diagOpen=false;this._view="gas_remaining";
     this._history=[];this._loaded=false;this._loading=false;this._error="";
     this._generation=0;this._scheduled=false;
@@ -169,8 +169,9 @@ class Senso4sBasicCard extends HTMLElement {
   setConfig(config){
     if(!config||typeof config!=="object")throw new Error("Configuration is required");
     const previous=JSON.stringify(this._config);
-    this._config={title:"Senso4s Basic",entity:"",language:"auto",history_hours:168,show_history:true,show_diagnostics:true,size:"standard",...config};
+    this._config={title:"",entity:"",language:"auto",history_hours:168,show_history:true,show_diagnostics:true,size:"standard",demo_mode:"off",...config};
     if(!["mini","standard"].includes(this._config.size)) throw new Error("size must be mini or standard");
+    if(!["off","basic","plus","plus_warning","plus_disabled"].includes(this._config.demo_mode))throw new Error("invalid demo_mode");
     if(typeof this._config.show_history!=="boolean"||typeof this._config.show_diagnostics!=="boolean") throw new Error("show_history and show_diagnostics must be boolean values (true/false)");
     if(this._config.show_actions!==undefined&&typeof this._config.show_actions!=="boolean")throw new Error("show_actions must be a boolean value (true/false)");
     this._config.history_hours=Math.max(1,Math.min(720,Number(this._config.history_hours)||168));
@@ -197,7 +198,7 @@ class Senso4sBasicCard extends HTMLElement {
     const p=this._prefix();if(!p)return null;
     const ids=key==="rssi"?[`sensor.${p}_signal_strength`,`sensor.${p}_rssi`]
       :key==="error"?[`binary_sensor.${p}_error`,`binary_sensor.${p}_has_error`]
-      :["needs_calibration","low_gas"].includes(key)?[`binary_sensor.${p}_${key}`]
+      :["needs_calibration","low_gas","has_anomaly","temperature_anomaly","incline_anomaly","motion_anomaly"].includes(key)?[`binary_sensor.${p}_${key}`]
       :[`sensor.${p}_${key}`];
     return ids.find(id=>this._hass?.states?.[id])||ids[0];
   }
@@ -228,6 +229,27 @@ class Senso4sBasicCard extends HTMLElement {
     if(state==="off")return {icon:"mdi:check-circle",tone:"good",description:this._t("no")};
     // Calibration needs attention, while active error/low gas are warnings.
     return {icon:key==="needs_calibration"?"mdi:scale-balance":"mdi:alert-circle",tone:key==="needs_calibration"?"warn":"bad",description:this._t("yes")};
+  }
+  _model(){
+    const usage=this._state("usage_mode")?.attributes?.is_plus_model;
+    if(typeof usage==="boolean")return usage?"plus":"basic";
+    const entities=this._hass?.entities||{},devices=this._hass?.devices||{};
+    const weightId=this._id("gas_remaining"),modeId=this._id("usage_mode");
+    const deviceId=entities[weightId]?.device_id||entities[modeId]?.device_id;
+    const model=String(devices[deviceId]?.model||"").trim();
+    if(/senso4s\\s*plus/i.test(model))return "plus";
+    if(/senso4s\\s*basic/i.test(model))return "basic";
+    if(["has_anomaly","temperature_anomaly","incline_anomaly","motion_anomaly"].some(k=>this._state(k)))return "plus";
+    return "unknown";
+  }
+  _title(){return this._config.title||(this._model()==="plus"?"Senso4s Plus":"Senso4s Basic");}
+  _plusIcon(key){
+    const icons={has_anomaly:"mdi:alert-decagram",temperature_anomaly:"mdi:thermometer-alert",incline_anomaly:"mdi:angle-acute",motion_anomaly:"mdi:motion-sensor"};
+    const state=this._val(key),known=state==="on"||state==="off";
+    const icon=!known?"mdi:help-circle-outline":state==="on"?icons[key]:"mdi:check-circle";
+    const tone=!known?"neutral":state==="on"?"bad":"good";
+    const description=!known?this._t("plusUnknown"):state==="on"?this._t("yes"):this._t("no");
+    return '<span class="diag-visual '+tone+'" role="img" aria-label="'+this._esc(description)+'" title="'+this._esc(description)+'"><ha-icon icon="'+icon+'"></ha-icon></span>';
   }
   _diagIcon(key){
     const data=key==="usage_mode"?this._modeVisual():this._flagVisual(key);
