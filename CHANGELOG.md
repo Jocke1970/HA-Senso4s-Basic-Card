@@ -1,5 +1,15 @@
 # Changelog
 
+## 0.1.5b4 — 2026-11-04 (dev Mini dual-brand and dynamic gas-color fix)
+
+- Restore **both icons** in Mini: original SENSO logo beside the gas-cylinder pictogram
+- Dynamically color the Mini cylinder blue at 20%+, amber at 11–19%, red at 10% or less or with an active `low_gas` warning, and neutral for missing/invalid values
+- Keep the same card entity selection and Mini/Standard Basic/Plus layouts
+- Add responsive smaller dual-icon layout for narrow dashboard columns
+- Preserve disabled Refill/Calibration placeholders, read-only behavior and isolated demo fixtures
+- 71 simulated frontend tests pass, with regression cases for both icons, Plus, missing level and configured low-gas warning
+- Dev only; beta/main unchanged and new Mini layout awaits visual verification in HA
+
 ## 0.1.5b3 — 2026-11-04 (dev demo history correction)
 
 - Distinguish synthetic demonstration history from live Home Assistant Recorder history using Swedish and English labels
