@@ -4,7 +4,7 @@ A standalone, read-only Home Assistant Lovelace card for **Senso4s Basic and Plu
 
 **Stable release: 0.1.3 (2026-11-03).** Native Home Assistant visual configuration, Swedish/English UI, matching Mini/Standard default widths and optional **disabled** quick-action placeholders. Real refill and calibration operations are not yet implemented.
 
-## Development preview — 0.1.5b1 Basic / Plus + simulated scale
+## Development preview — 0.1.5b2 Basic / Plus + simulated scale
 
 **Status: dev only; not yet visually tested on a live Home Assistant dashboard.** The stable release on `main` is still 0.1.3. This is a read-only frontend build; it does not call Senso4s services or alter any real cylinder's values.
 
@@ -45,15 +45,15 @@ Test data (e.g., 6.80 kg gas remaining and 84% battery), dates and histories liv
 
 To visually test the `dev` version, install/update [senso4s-basic-card.js from dev](https://github.com/Jocke1970/HA-Senso4s-Basic-Card/blob/dev/senso4s-basic-card.js) at `/config/www/senso4s-basic-card.js` and keep your existing resource at `/local/senso4s-basic-card.js`. Refresh the browser cache. Do not use this pre-release for production monitoring.
 
-**Validation so far:** JavaScript syntax checks and 65 frontend simulation tests passed. Live HA visual confirmation and CI status are separate release gates. Continue `dev → beta → main` only after reviewing Mini, Standard, warning, and disabled-entity states.
+**Validation so far:** JavaScript syntax checks and 66 frontend simulation tests passed. Live HA visual confirmation and CI status are separate release gates. Continue `dev → beta → main` only after reviewing Mini, Standard, warning, and disabled-entity states.
 
 ## Development preview — 0.1.4b1 original SENSO branding
 
-The `dev` branch now embeds a transparent 128 × 128 PNG cropped/cleaned from the user's **original SENSO logo**. It replaces the blue gas-cylinder placeholder icon in the **Standard header** and **Mini tile**. The original dark lettering, lime accent and white round tile are preserved without generated shadows or gray patches.
+The `dev` branch embeds a 128 × 128 PNG cleaned from the user's **original SENSO logo**, displayed in the **Standard header**. Mini intentionally retains its original blue **gas-cylinder icon** for the compact scale overview; this was restored in 0.1.5b2. The original logo lettering, lime accent and white round tile are preserved without generated shadows.
 
 Because the image is embedded in `senso4s-basic-card.js`, no extra `/local/` asset, external URL or new dashboard resource is needed. Use the [dev JS file](https://github.com/Jocke1970/HA-Senso4s-Basic-Card/blob/dev/senso4s-basic-card.js) only for testing; `beta` and stable `main` remain on their previous release until approved.
 
-This branding-only note applies to 0.1.4b1; the later 0.1.5b1 preview also adds Basic/Plus layouts and the synthetic test scenarios above.
+This branding-only note documents 0.1.4b1; the current 0.1.5b2 preview restores the original Mini cylinder icon while retaining the Standard branding, Basic/Plus layouts and synthetic test scenarios above.
 
 ## Visual card editor — stable 0.1.3
 
