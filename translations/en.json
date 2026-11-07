@@ -87,5 +87,12 @@
   "plusProblem": "Problem",
   "plusProblemHint": "One or more Plus sensors are unavailable in Home Assistant. Check the integration and entity availability.",
   "plusPartDisabledHint": "Some Plus diagnostic sensors are disabled and are hidden.",
-  "editorDemoUnavailable": "Simulated Plus (sensor unavailable)"
+  "editorDemoUnavailable": "Simulated Plus (sensor unavailable)",
+  "editorDemoMiniBlue": "Color test · Blue (20%)",
+  "editorDemoMiniAmber": "Color test · Amber (15%)",
+  "editorDemoMiniRed": "Color test · Red (8%)",
+  "editorDemoMiniNeutral": "Color test · Grey (missing data)",
+  "editorDemoMiniLowGas": "Color test · Low-gas warning at 30%",
+  "editorDemoMiniIconsWarn": "Color test · Battery/BLE warning",
+  "editorDemoMiniIconsCritical": "Color test · Battery/BLE critical"
 }

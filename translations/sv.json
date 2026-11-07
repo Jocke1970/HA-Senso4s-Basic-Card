@@ -87,5 +87,12 @@
   "plusProblem": "Problem",
   "plusProblemHint": "En eller flera Plus-sensorer är otillgängliga i Home Assistant. Kontrollera integrationen och att entiteterna är tillgängliga.",
   "plusPartDisabledHint": "Vissa Plus-sensorer är avaktiverade och visas inte.",
-  "editorDemoUnavailable": "Simulerad Plus (sensor otillgänglig)"
+  "editorDemoUnavailable": "Simulerad Plus (sensor otillgänglig)",
+  "editorDemoMiniBlue": "Färgtest · Blå (20 %)",
+  "editorDemoMiniAmber": "Färgtest · Orange (15 %)",
+  "editorDemoMiniRed": "Färgtest · Röd (8 %)",
+  "editorDemoMiniNeutral": "Färgtest · Grå (saknade värden)",
+  "editorDemoMiniLowGas": "Färgtest · Låg gasol-varning vid 30 %",
+  "editorDemoMiniIconsWarn": "Färgtest · Batteri/BLE-varning",
+  "editorDemoMiniIconsCritical": "Färgtest · Batteri/BLE-kritiskt"
 }

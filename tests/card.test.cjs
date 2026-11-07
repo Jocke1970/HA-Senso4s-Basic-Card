@@ -461,7 +461,7 @@ test('bundled translations contain synchronized Swedish, English, Spanish and Fi
     assert.deepEqual(Object.keys(dictionaries[locale]).sort(),en,locale);
     for(const key of en)assert.ok(dictionaries[locale][key].trim(),locale+'.'+key);
   }
-  assert.match(js,/VERSION="0\.1\.5b6"/);
+  assert.match(js,/VERSION="0\.1\.5b7"/);
 });
 
 test('Spanish, Finnish and fallback locales render without mixing languages', async () => {
@@ -1216,4 +1216,79 @@ test('Mini keeps both icons with Plus warning and when quick actions are enabled
   assert.match(html,/@media\(max-width:300px\)/);
   assert.equal(card.getGridOptions().columns,12);
   assert.equal(card.getCardSize(),1);
+});
+
+test('Mini color preview scenarios use synthetic Basic data with all requested severity bands', async () => {
+  const scenarios=[
+    {mode:'mini_blue',level:'20',color:'normal',mass:'2,00 kg'},
+    {mode:'mini_amber',level:'15',color:'warn',mass:'1,50 kg'},
+    {mode:'mini_red',level:'8',color:'bad',mass:'0,80 kg'},
+    {mode:'mini_neutral',level:'unknown',color:'neutral',mass:null},
+    {mode:'mini_low_gas',level:'30',color:'bad',mass:'3,00 kg'}
+  ];
+  for(const sc of scenarios){
+    const card=new Card();
+    card.setConfig({size:'mini',language:'sv',demo_mode:sc.mode});
+    const realStates=makeStates(),original=JSON.stringify(realStates);
+    card.hass={states:realStates,language:'sv',callApi:()=>{throw Error('DEMO may not call HA APIs');}};
+    await Promise.resolve();
+    const html=card.shadowRoot.innerHTML;
+    assert.equal(card._model(),'basic',sc.mode);
+    assert.equal(card._val('gas_level'),sc.level,sc.mode);
+    assert.equal(card._cylinderSeverity(),sc.color,sc.mode);
+    assert.match(html,new RegExp('class="mini-cylinder '+sc.color+'"'),sc.mode);
+    assert.match(html,/DEMO – fiktiv enhet/,sc.mode);
+    assert.equal(html.includes('PLUS !'),false);
+    assert.match(html,/class="mini-brand-logo"><img src="data:image[/]png;base64,/,sc.mode);
+    if(sc.mass)assert.ok(html.includes(sc.mass),sc.mode);
+    else assert.match(html,/class="mini-weight"[^>]*>—<\/div>/,sc.mode);
+    assert.equal(JSON.stringify(realStates),original,'No real states modified by '+sc.mode);
+    assert.equal(Object.keys(realStates).some(k=>k.includes('demo')),false);
+    if(sc.mode==='mini_low_gas')assert.equal(card._val('low_gas'),'on');
+  }
+});
+
+test('Mini icons warn and turn critical for battery/BLE synthetic previews', async () => {
+  for(const [mode,battery,rssi,expected] of [
+    ['mini_icons_warn','15','-78','warn'],['mini_icons_critical','8','-90','bad'],
+    ['mini_neutral','unknown','unknown','neutral']
+  ]){
+    const card=new Card();card.setConfig({size:'mini',demo_mode:mode,language:'sv'});
+    card.hass={states:{},language:'sv'};await Promise.resolve();
+    assert.equal(card._val('battery'),battery,mode);
+    assert.equal(card._val('rssi'),rssi,mode);
+    assert.equal(card._batterySeverity(),expected,mode);
+    assert.equal(card._signalSeverity(),expected,mode);
+    assert.match(card.shadowRoot.innerHTML,new RegExp('class="mini-status '+expected+'"'),mode);
+    if(expected==='neutral')assert.match(card.shadowRoot.innerHTML,/mdi:bluetooth-off/);
+  }
+});
+
+test('color demos are exposed in visual editor and persist when switching modes', async () => {
+  const editor=new Editor();editor.setConfig({size:'mini',language:'sv',demo_mode:'mini_amber',title:'Färgtest'});
+  editor.hass={states:makeStates(),language:'sv'};
+  const html=editor.shadowRoot.innerHTML;
+  for(const mode of ['mini_blue','mini_amber','mini_red','mini_neutral','mini_low_gas','mini_icons_warn','mini_icons_critical']){
+    assert.ok(html.includes('value="'+mode+'"'),mode);
+    const card=new Card();card.setConfig({demo_mode:mode,size:'mini'});
+    card.hass={states:{},language:'sv'};await Promise.resolve();
+    assert.match(card.shadowRoot.innerHTML,/DEMO/);
+  }
+  editor._handleChange({target:{dataset:{field:'demo_mode'},type:'select-one',value:'mini_red'}});
+  const saved=editor.events.at(-1).detail.config;
+  assert.equal(saved.demo_mode,'mini_red');
+  assert.equal(saved.title,'Färgtest');
+  assert.equal(saved.size,'mini');
+  editor._handleChange({target:{dataset:{field:'demo_mode'},type:'select-one',value:'off'}});
+  assert.equal(editor.events.at(-1).detail.config.demo_mode,'off');
+});
+
+test('new color preview modes do not change the independent real Basic view', async () => {
+  const states=makeStates(); const card=new Card();
+  card.setConfig({language:'sv',size:'mini',demo_mode:'off'});
+  card.hass={states,language:'sv'};await Promise.resolve();
+  assert.equal(card._model(),'basic');
+  assert.equal(card._cylinderSeverity(),'normal');
+  assert.equal(card.shadowRoot.innerHTML.includes('DEMO'),false);
+  assert.equal(js.includes('callService('),false);
 });

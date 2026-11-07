@@ -87,5 +87,12 @@
   "plusProblem": "Problema",
   "plusProblemHint": "Uno o varios sensores Plus no están disponibles en Home Assistant. Comprueba la integración y la disponibilidad de las entidades.",
   "plusPartDisabledHint": "Algunos sensores de diagnóstico Plus están desactivados y no se muestran.",
-  "editorDemoUnavailable": "Plus simulado (sensor no disponible)"
+  "editorDemoUnavailable": "Plus simulado (sensor no disponible)",
+  "editorDemoMiniBlue": "Prueba de color · Azul (20 %)",
+  "editorDemoMiniAmber": "Prueba de color · Ámbar (15 %)",
+  "editorDemoMiniRed": "Prueba de color · Rojo (8 %)",
+  "editorDemoMiniNeutral": "Prueba de color · Gris (sin datos)",
+  "editorDemoMiniLowGas": "Prueba de color · Aviso de gas al 30 %",
+  "editorDemoMiniIconsWarn": "Prueba de color · Alerta batería/BLE",
+  "editorDemoMiniIconsCritical": "Prueba de color · Batería/BLE críticos"
 }

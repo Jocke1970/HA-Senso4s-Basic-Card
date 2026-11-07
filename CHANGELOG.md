@@ -1,5 +1,13 @@
 # Changelog
 
+## 0.1.5b7 — 2026-11-07 (dev Mini color preview tests)
+
+- Add seven safe visual DEMO scenarios for Mini cylinder colors and battery/BLE icons: blue 20%, amber 15%, red 8%, grey missing-data, low-gas warning at 30%, battery/BLE warning and critical
+- All color scenarios are synthetic Basic previews and never alter the real Senso4s integration, its entity values or Recorder data
+- Add visual-editor choices in Swedish, English, Finnish and Spanish
+- Cover DEMO scene outputs, color severity, safe isolation, editor switching and unchanged real Basic card through automated tests
+- Retain existing Plus demo scenarios and 0.1.5b6 history grids; next step CI then beta promotion (never install dev)
+
 ## 0.1.5b6 — 2026-11-04 (dev history axes and gridlines)
 
 - Add numeric Y-axis ticks, horizontal gridlines and localized time/date ticks to gas mass, battery and RSSI history charts

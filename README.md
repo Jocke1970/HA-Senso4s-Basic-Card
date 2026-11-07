@@ -4,6 +4,12 @@ A standalone, read-only Home Assistant Lovelace card for **Senso4s Basic and Plu
 
 **Stable release: 0.1.3 (2026-11-03).** Native Home Assistant visual configuration, Swedish/English UI, matching Mini/Standard default widths and optional **disabled** quick-action placeholders. Real refill and calibration operations are not yet implemented.
 
+## Development preview — 0.1.5b7 Mini color test scenarios
+
+**For beta test only after promoting dev → beta; never install dev on Home Assistant.** The visual editor provides seven additional DEMO scenes for Mini: blue (20%), amber (15%), red (8%), grey (missing gas/battery/BLE values), a forced low-gas warning at 30%, and warning/critical battery and BLE signals. All samples are contained in the card; no device commands, real state changes or Recorder calls.
+
+**Practical tests:** Select `Card size: Mini`, then choose each `Color test` under `Test device`. Verify the cylinder color and icons. Restore `Test device: Off – real Senso4s` after testing. Color boundaries 10/11/19/20% are covered by frontend regression tests.
+
 ## Development preview — 0.1.5b6 labeled history charts
 
 **Dev only.** The Standard history view now draws a numeric Y axis and horizontal reference lines for gas mass, battery percentage, and Bluetooth signal, plus date/time markers on the X axis. For gas mass, the Y axis starts at zero and uses the reported cylinder capacity (e.g., 0–10 kg for P10); it expands if a historical measurement exceeds that capacity. The small number range above the chart still shows **observed minimum–maximum**, not the axis limits. Recorder data stays unchanged, and the weight graph remains a discrete step plot. There are no new language strings, Lovelace options, or HACS resources.
@@ -68,7 +74,7 @@ Test data (e.g., 6.80 kg gas remaining and 84% battery), dates and histories liv
 
 **Demo history label:** In demo mode, the history panel explicitly says that the graph contains synthetic sample data and never claims the values came from Home Assistant Recorder. In real-device mode, the standard Recorder attribution remains.
 
-To visually test the `dev` version, install/update [senso4s-basic-card.js from dev](https://github.com/Jocke1970/HA-Senso4s-Basic-Card/blob/dev/senso4s-basic-card.js) at `/config/www/senso4s-basic-card.js` and keep your existing resource at `/local/senso4s-basic-card.js`. Refresh the browser cache. Do not use this pre-release for production monitoring.
+Never install the `dev` branch in Home Assistant. Run automated checks in `dev` and install only the promoted `beta` resource at `/config/www/senso4s-basic-card.js` for practical testing. Keep `/local/senso4s-basic-card.js` as the existing dashboard resource and refresh the browser cache.
 
 **Validation so far:** JavaScript syntax checks and 71 frontend simulation tests passed. Live HA visual confirmation and CI status are separate release gates. Continue `dev → beta → main` only after reviewing Mini, Standard, warning, and disabled-entity states.
 
@@ -76,7 +82,7 @@ To visually test the `dev` version, install/update [senso4s-basic-card.js from d
 
 The `dev` branch embeds a 128 × 128 PNG cleaned from the user's **original SENSO logo**. In 0.1.5b4, **Mini shows both the SENSO logo and the gas-cylinder icon** next to each other, while Standard retains the logo in its header. The original dark lettering and lime accent remain unchanged.
 
-Because the image is embedded in `senso4s-basic-card.js`, no extra `/local/` asset, external URL or new dashboard resource is needed. Use the [dev JS file](https://github.com/Jocke1970/HA-Senso4s-Basic-Card/blob/dev/senso4s-basic-card.js) only for testing; `beta` and stable `main` remain on their previous release until approved.
+Because the image is embedded in `senso4s-basic-card.js`, no extra `/local/` asset, external URL or new dashboard resource is needed. The original artwork is bundled into the generated JavaScript resource. Install only from `beta` or `main`, never `dev`.
 
 This branding-only note documents the earlier 0.1.4b1 preview. The current 0.1.5b4 Mini uses two icons together, without affecting the Basic/Plus identification or the synthetic previews.
 

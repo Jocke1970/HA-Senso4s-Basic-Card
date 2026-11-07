@@ -1,7 +1,7 @@
-/* Senso4s Basic / Plus Lovelace Card v0.1.5b6. MIT license. Read-only. */
+/* Senso4s Basic / Plus Lovelace Card v0.1.5b7. MIT license. Read-only. */
 (()=>{
 "use strict";
-const TAG="senso4s-basic-card", VERSION="0.1.5b6";
+const TAG="senso4s-basic-card", VERSION="0.1.5b7";
 // Source: the user-supplied SENSO original artwork; clean white tile, no AI-generated shadows.
 // Embedded data URI keeps the single-file /local/senso4s-basic-card.js installation working.
 const BRAND_ICON="data:image/png;base64,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";
@@ -99,7 +99,7 @@ class Senso4sBasicCardEditor extends HTMLElement {
     }
     if(field==="size"&&!["mini","standard"].includes(value))return;
     if(field==="language"&&!["auto","sv","en","es","fi"].includes(value))return;
-    if(field==="demo_mode"&&!["off","basic","plus","plus_warning","plus_disabled","plus_unavailable"].includes(value))return;
+    if(field==="demo_mode"&&!["off","basic","plus","plus_warning","plus_disabled","plus_unavailable","mini_blue","mini_amber","mini_red","mini_neutral","mini_low_gas","mini_icons_warn","mini_icons_critical"].includes(value))return;
     const old=this._config[field];
     if(value===old || old===undefined && (
       value==="" && ["entity","title"].includes(field) ||
@@ -142,7 +142,7 @@ class Senso4sBasicCardEditor extends HTMLElement {
  <div class="field" data-real-entity><label for="sc-entity">${t("editorEntity")}</label><select id="sc-entity" data-field="entity">${select(options)}</select>${devices.length?"":`<p class="hint">${t("editorNoDevices")}</p>`}</div>
  <div class="field"><label for="sc-size">${t("editorSize")}</label><select id="sc-size" data-field="size">${select([{id:"standard",name:this._t("editorStandard")},{id:"mini",name:this._t("editorMini")}])}</select></div>
  <div class="field"><label for="sc-language">${t("editorLanguage")}</label><select id="sc-language" data-field="language">${select([{id:"auto",name:this._t("editorAuto")},{id:"sv",name:"Svenska"},{id:"en",name:"English"},{id:"es",name:"Español"},{id:"fi",name:"Suomi"}])}</select></div>
-  <div class="field"><label for="sc-demo">${t("editorDemo")}</label><select id="sc-demo" data-field="demo_mode">${select([{id:"off",name:this._t("editorDemoOff")},{id:"basic",name:this._t("editorDemoBasic")},{id:"plus",name:this._t("editorDemoPlus")},{id:"plus_warning",name:this._t("editorDemoWarn")},{id:"plus_disabled",name:this._t("editorDemoDisabled")},{id:"plus_unavailable",name:this._t("editorDemoUnavailable")}])}</select><p class="hint">${t("editorDemoHint")}</p></div>
+  <div class="field"><label for="sc-demo">${t("editorDemo")}</label><select id="sc-demo" data-field="demo_mode">${select([{id:"off",name:this._t("editorDemoOff")},{id:"basic",name:this._t("editorDemoBasic")},{id:"plus",name:this._t("editorDemoPlus")},{id:"plus_warning",name:this._t("editorDemoWarn")},{id:"plus_disabled",name:this._t("editorDemoDisabled")},{id:"plus_unavailable",name:this._t("editorDemoUnavailable")},{id:"mini_blue",name:this._t("editorDemoMiniBlue")},{id:"mini_amber",name:this._t("editorDemoMiniAmber")},{id:"mini_red",name:this._t("editorDemoMiniRed")},{id:"mini_neutral",name:this._t("editorDemoMiniNeutral")},{id:"mini_low_gas",name:this._t("editorDemoMiniLowGas")},{id:"mini_icons_warn",name:this._t("editorDemoMiniIconsWarn")},{id:"mini_icons_critical",name:this._t("editorDemoMiniIconsCritical")}])}</select><p class="hint">${t("editorDemoHint")}</p></div>
  <div class="options" data-action-options>
    <label class="check"><input type="checkbox" data-field="show_actions">${t("editorActions")}</label>
    <p class="hint">${t("editorActionsHint")}</p>
@@ -178,7 +178,7 @@ class Senso4sBasicCard extends HTMLElement {
     const previous=JSON.stringify(this._config);
     this._config={title:"",entity:"",language:"auto",history_hours:168,show_history:true,show_diagnostics:true,size:"standard",demo_mode:"off",...config};
     if(!["mini","standard"].includes(this._config.size)) throw new Error("size must be mini or standard");
-    if(!["off","basic","plus","plus_warning","plus_disabled","plus_unavailable"].includes(this._config.demo_mode))throw new Error("invalid demo_mode");
+    if(!["off","basic","plus","plus_warning","plus_disabled","plus_unavailable","mini_blue","mini_amber","mini_red","mini_neutral","mini_low_gas","mini_icons_warn","mini_icons_critical"].includes(this._config.demo_mode))throw new Error("invalid demo_mode");
     if(typeof this._config.show_history!=="boolean"||typeof this._config.show_diagnostics!=="boolean") throw new Error("show_history and show_diagnostics must be boolean values (true/false)");
     if(this._config.show_actions!==undefined&&typeof this._config.show_actions!=="boolean")throw new Error("show_actions must be a boolean value (true/false)");
     this._config.history_hours=Math.max(1,Math.min(720,Number(this._config.history_hours)||168));
@@ -201,18 +201,29 @@ class Senso4sBasicCard extends HTMLElement {
     if(!this._isDemo())return this._hass?.states||{};
     const mode=this._config.demo_mode;
     if(this._demoCacheMode===mode&&this._demoCache)return this._demoCache;
-    const plus=mode!=="basic",prefix="senso4s_demo_"+(plus?"plus":"basic");
+    const plus=["plus","plus_warning","plus_disabled","plus_unavailable"].includes(mode),prefix="senso4s_demo_"+(plus?"plus":"basic");
     const now=new Date(),seen=now.toISOString(),changed=new Date(now.getTime()-18*60000).toISOString();
     const empty=new Date(now.getTime()+38*86400000).toISOString(),states={};
     const add=(kind,key,value,attributes={})=>{
       const id=kind+"."+prefix+"_"+key;
       states[id]={entity_id:id,state:String(value),attributes,last_changed:changed,last_updated:seen};
     };
-    add("sensor","gas_remaining",6.8);add("sensor","gas_level",68);
-    add("sensor","battery",84,{last_seen:seen});add("sensor","signal_strength",-59);
+    // Color previews use synthetic Basic values only. No HA entities are modified.
+    const preview={
+      mini_blue:{level:20},mini_amber:{level:15},mini_red:{level:8},
+      mini_neutral:{level:"unknown",battery:"unknown",rssi:"unknown"},
+      mini_low_gas:{level:30,lowGas:true},
+      mini_icons_warn:{level:68,battery:15,rssi:-78},
+      mini_icons_critical:{level:68,battery:8,rssi:-90}
+    }[mode]||{};
+    const level=preview.level??68;
+    const mass=level==="unknown"?"unknown":level/10;
+    add("sensor","gas_remaining",mass);add("sensor","gas_level",level);
+    add("sensor","battery",preview.battery??84,{last_seen:seen});
+    add("sensor","signal_strength",preview.rssi??-59);
     add("sensor","usage_mode",plus?"Caravanning":"Heating",{is_plus_model:plus});
     add("sensor","estimated_empty",empty);add("sensor","gas_capacity",10);
-    for(const key of ["error","needs_calibration","low_gas"])add("binary_sensor",key,"off");
+    for(const key of ["error","needs_calibration","low_gas"])add("binary_sensor",key,key==="low_gas"&&preview.lowGas?"on":"off");
     if(plus&&mode!=="plus_disabled"){
       const warning=mode==="plus_warning";
       for(const key of ["has_anomaly","temperature_anomaly","incline_anomaly","motion_anomaly"])
@@ -222,7 +233,7 @@ class Senso4sBasicCard extends HTMLElement {
   }
   _candidates(){return Object.keys(this._states()).filter(id=>/^sensor\.senso4s_.+_gas_remaining$/.test(id)).sort();}
   _prefix(){
-    if(this._isDemo())return "senso4s_demo_"+(this._config.demo_mode==="basic"?"basic":"plus");
+    if(this._isDemo())return "senso4s_demo_"+(this._config.demo_mode==="basic"||this._config.demo_mode.startsWith("mini_")?"basic":"plus");
     const selected=String(this._config.entity||"").trim();
     if(selected){const n=selected.replace(/^sensor\./,"").replace(/_(gas_remaining|gas_level|battery)$/,"");return /^senso4s_.+/.test(n)?n:null;}
     const list=this._candidates();return list.length===1?list[0].slice(7,-"_gas_remaining".length):null;
@@ -264,7 +275,7 @@ class Senso4sBasicCard extends HTMLElement {
     return {icon:key==="needs_calibration"?"mdi:scale-balance":"mdi:alert-circle",tone:key==="needs_calibration"?"warn":"bad",description:this._t("yes")};
   }
   _model(){
-    if(this._isDemo())return this._config.demo_mode==="basic"?"basic":"plus";
+    if(this._isDemo())return this._config.demo_mode==="basic"||this._config.demo_mode.startsWith("mini_")?"basic":"plus";
     const usage=this._state("usage_mode")?.attributes?.is_plus_model;
     if(typeof usage==="boolean")return usage?"plus":"basic";
     const entities=this._hass?.entities||{},devices=this._hass?.devices||{};

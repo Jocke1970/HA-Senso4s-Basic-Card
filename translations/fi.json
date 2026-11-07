@@ -87,5 +87,12 @@
   "plusProblem": "Ongelma",
   "plusProblemHint": "Yksi tai useampi Plus-anturi ei ole käytettävissä Home Assistantissa. Tarkista integraatio ja entiteettien saatavuus.",
   "plusPartDisabledHint": "Osa Plus-diagnostiikan antureista on poistettu käytöstä, eikä niitä näytetä.",
-  "editorDemoUnavailable": "Simuloitu Plus (anturi ei käytettävissä)"
+  "editorDemoUnavailable": "Simuloitu Plus (anturi ei käytettävissä)",
+  "editorDemoMiniBlue": "Väritesti · Sininen (20 %)",
+  "editorDemoMiniAmber": "Väritesti · Oranssi (15 %)",
+  "editorDemoMiniRed": "Väritesti · Punainen (8 %)",
+  "editorDemoMiniNeutral": "Väritesti · Harmaa (tiedot puuttuvat)",
+  "editorDemoMiniLowGas": "Väritesti · Kaasuvaroitus 30 %:ssa",
+  "editorDemoMiniIconsWarn": "Väritesti · Akku/BLE-varoitus",
+  "editorDemoMiniIconsCritical": "Väritesti · Akku/BLE-kriittinen"
 }
