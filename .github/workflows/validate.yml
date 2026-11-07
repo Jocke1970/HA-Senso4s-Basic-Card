@@ -11,10 +11,12 @@ jobs:
       - name: Verify bundled translations
         run: node scripts/build.mjs --check
       - name: Check JavaScript syntax
-        run: node --check senso4s-basic-card.js
+        run: |
+          node --check senso4s-card.js
+          node --check senso4s-basic-card.js
       - name: Run frontend component tests
         run: node --test tests/*.test.cjs
       - name: Validate HACS metadata
-        run: node -e "const f=require('./hacs.json'); if(f.filename!=='senso4s-basic-card.js'||f.content_in_root!==true) process.exit(1)"
+        run: node -e "const f=require('./hacs.json'); if(f.name!=='Senso4s Card'||f.filename!=='senso4s-card.js'||f.content_in_root!==true) process.exit(1)"
       - name: Reject Wecamp coupling
-        run: '! grep -i "wecamp" senso4s-basic-card.js'
+        run: '! grep -i "wecamp" senso4s-card.js'

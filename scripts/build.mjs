@@ -14,11 +14,11 @@ const source=readFileSync(resolve(root,"src","senso4s-basic-card.template.js"),"
 const marker="const L=__TRANSLATIONS__;";
 if(!source.includes(marker)||source.indexOf(marker)!==source.lastIndexOf(marker))throw Error("Exactly one translation placeholder required");
 const output=source.replace(marker,"const L="+JSON.stringify(translations)+";");
-const target=resolve(root,"senso4s-basic-card.js");
+const targets=["senso4s-card.js","senso4s-basic-card.js"].map(name=>resolve(root,name));
 if(process.argv.includes("--check")){
-  if(readFileSync(target,"utf8")!==output)throw Error("Generated card out of date: run node scripts/build.mjs");
-  console.info("Translation bundle matches the generated card ("+langs.join(", ")+")");
+  for(const target of targets)if(readFileSync(target,"utf8")!==output)throw Error("Generated card out of date: run node scripts/build.mjs");
+  console.info("Translation bundle matches both Senso4s Card resources ("+langs.join(", ")+")");
 }else{
-  writeFileSync(target,output);
-  console.info("Built senso4s-basic-card.js with "+langs.length+" languages");
+  for(const target of targets)writeFileSync(target,output);
+  console.info("Built Senso4s Card + legacy resource with "+langs.length+" languages");
 }
