@@ -4,7 +4,7 @@ const fs = require('node:fs');
 const vm = require('node:vm');
 const path = require('node:path');
 
-const js = fs.readFileSync(path.join(__dirname, '..', 'senso4s-basic-card.js'), 'utf8');
+const js = fs.readFileSync(path.join(__dirname, '..', 'senso4s-card.js'), 'utf8');
 const registry = new Map();
 class HTMLElementMock {
   attachShadow() {
@@ -26,9 +26,11 @@ const sandbox = {
   CustomEvent: class CustomEvent { constructor(type,options){this.type=type;Object.assign(this,options);} },
   console,
 };
-vm.runInNewContext(js, sandbox, { filename: 'senso4s-basic-card.js' });
-const Card = registry.get('senso4s-basic-card');
-const Editor = registry.get('senso4s-basic-card-editor');
+vm.runInNewContext(js, sandbox, { filename: 'senso4s-card.js' });
+const Card = registry.get('senso4s-card');
+const Editor = registry.get('senso4s-card-editor');
+const LegacyCard = registry.get('senso4s-basic-card');
+const LegacyEditor = registry.get('senso4s-basic-card-editor');
 const base = 'senso4s_gas_sensor_5d32';
 const oldTime = '2026-11-02T21:00:54+00:00';
 const newTime = '2026-11-02T21:30:54+00:00';
@@ -453,7 +455,7 @@ test('diagnostic panel has a symmetric two-by-two grid with icons below labels',
 });
 
 test('bundled translations contain synchronized Swedish, English, Spanish and Finnish dictionaries', () => {
-  const match=js.match(/const L=(\{[\s\S]*?\});\s*const LOCALES=/);
+  const match=js.match(/const L=(\{[\s\S]*?\});\s*function normalizeTitle/);
   assert.ok(match,'generated translation dictionary exists');
   const dictionaries=JSON.parse(match[1]);
   const en=Object.keys(dictionaries.en).sort();
@@ -461,7 +463,7 @@ test('bundled translations contain synchronized Swedish, English, Spanish and Fi
     assert.deepEqual(Object.keys(dictionaries[locale]).sort(),en,locale);
     for(const key of en)assert.ok(dictionaries[locale][key].trim(),locale+'.'+key);
   }
-  assert.match(js,/VERSION="0\.1\.5b7"/);
+  assert.match(js,/VERSION="2026\.11\.0b1"/);
 });
 
 test('Spanish, Finnish and fallback locales render without mixing languages', async () => {
@@ -481,7 +483,7 @@ test('show_history and show_diagnostics default to true for existing dashboards'
   const html = card.shadowRoot.innerHTML;
   assert.match(html, /data-toggle="history"/);
   assert.match(html, /data-toggle="diag"/);
-  assert.match(html, /Senso4s Basic · 0\.1\.5b7/);
+  assert.match(html, /Senso4s Card · 2026\.11\.0b1/);
   assert.equal(card.getCardSize(), 6);
 });
 
@@ -908,7 +910,7 @@ test('real Plus model is detected from usage_mode even with all optional anomaly
   card.hass={states,language:'sv'};
   await Promise.resolve();
   assert.equal(card._model(),'plus');
-  assert.match(card.shadowRoot.innerHTML,/Senso4s Plus/);
+  assert.match(card.shadowRoot.innerHTML,/<h2>Senso4s<\/h2>/);
   card._diagOpen=true;card._schedule();await Promise.resolve();
   const html=card.shadowRoot.innerHTML;
   assert.match(html,/Plus-diagnostik är avaktiverad/);
@@ -930,7 +932,7 @@ test('Plus detection falls back to HA device registry when usage_mode is disable
   };
   await Promise.resolve();
   assert.equal(card._model(),'plus');
-  assert.match(card.shadowRoot.innerHTML,/Senso4s Plus/);
+  assert.match(card.shadowRoot.innerHTML,/<h2>Senso4s<\/h2>/);
   card._diagOpen=true;card._schedule();await Promise.resolve();
   assert.match(card.shadowRoot.innerHTML,/Plus diagnostics are disabled/);
 });
@@ -954,7 +956,7 @@ test('synthetic Plus preview renders realistic mass and diagnostics without real
   assert.equal(card._model(),'plus');
   assert.match(card.shadowRoot.innerHTML,/DEMO – fiktiv enhet/);
   assert.match(card.shadowRoot.innerHTML,/6,80 kg/);
-  assert.match(card.shadowRoot.innerHTML,/Senso4s Plus/);
+  assert.match(card.shadowRoot.innerHTML,/<h2>Senso4s<\/h2>/);
   assert.equal(Object.keys(states).length,count);
   assert.equal(Object.keys(states).some(x=>x.includes('_demo_')),false);
   card._diagOpen=true;card._schedule();await Promise.resolve();
@@ -1038,7 +1040,7 @@ test('synthetic Basic preview has no Plus badge or Plus diagnostic section', asy
   card.hass={states:{},language:'sv'};
   await Promise.resolve();card._diagOpen=true;card._schedule();await Promise.resolve();
   assert.equal(card._model(),'basic');
-  assert.match(card.shadowRoot.innerHTML,/Senso4s Basic/);
+  assert.match(card.shadowRoot.innerHTML,/<h2>Senso4s<\/h2>/);
   assert.equal(card.shadowRoot.innerHTML.includes('Plus-diagnostik'),false);
   assert.match(card.shadowRoot.innerHTML,/DEMO – fiktiv enhet/);
 });
@@ -1293,4 +1295,37 @@ test('new color preview modes do not change the independent real Basic view', as
   assert.equal(card._cylinderSeverity(),'normal');
   assert.equal(card.shadowRoot.innerHTML.includes('DEMO'),false);
   assert.equal(js.includes('callService('),false);
+});
+
+
+test('unified card registers renamed and legacy types without losing old dashboards', async () => {
+  assert.equal(typeof Card,'function');
+  assert.equal(typeof Editor,'function');
+  assert.equal(typeof LegacyCard,'function');
+  assert.equal(typeof LegacyEditor,'function');
+  const oldCard=new LegacyCard();
+  oldCard.setConfig({type:'custom:senso4s-basic-card',title:'Senso4s Basic',size:'mini'});
+  oldCard.hass={states:makeStates(),language:'sv'};
+  await Promise.resolve();
+  assert.equal(oldCard._title(),'Senso4s');
+  assert.match(oldCard.shadowRoot.innerHTML,/mini-cylinder normal/);
+  assert.ok(LegacyCard.getConfigElement() instanceof Editor);
+  assert.equal(sandbox.window.customCards.filter(x=>x.type==='senso4s-card').length,1);
+  assert.equal(sandbox.window.customCards.some(x=>x.name==='Senso4s Basic / Plus'),false);
+});
+
+test('renamed resources have identical compiled content and HACS metadata', async () => {
+  assert.equal(js,fs.readFileSync(path.join(__dirname,'..','senso4s-basic-card.js'),'utf8'));
+  const meta=JSON.parse(fs.readFileSync(path.join(__dirname,'..','hacs.json'),'utf8'));
+  assert.equal(meta.name,'Senso4s Card');
+  assert.equal(meta.filename,'senso4s-card.js');
+  const card=new Card();card.setConfig({title:'Senso4s Plus',language:'sv'});
+  card.hass={states:makeStates(),language:'sv'};await Promise.resolve();
+  assert.equal(card._title(),'Senso4s');
+  assert.match(card.shadowRoot.innerHTML,/<h2>Senso4s<\/h2>/);
+  assert.match(card.shadowRoot.innerHTML,/Senso4s Card · 2026\.11\.0b1/);
+  const e=new Editor();e.setConfig({title:'Senso4s Basic',size:'standard'});
+  assert.equal(e._config.title,'Senso4s');
+  e.setConfig({title:'Min egen titel'});
+  assert.equal(e._config.title,'Min egen titel');
 });

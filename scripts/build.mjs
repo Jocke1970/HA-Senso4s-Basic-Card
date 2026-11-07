@@ -10,15 +10,15 @@ for(const [lang,dictionary] of Object.entries(translations)){
   if(JSON.stringify(Object.keys(dictionary).sort())!==JSON.stringify(keys))throw Error("Translation keys differ in "+lang);
   for(const [key,value] of Object.entries(dictionary))if(typeof value!=="string"||!value.trim())throw Error("Empty or invalid translation: "+lang+"."+key);
 }
-const source=readFileSync(resolve(root,"src","senso4s-basic-card.template.js"),"utf8");
+const source=readFileSync(resolve(root,"src","senso4s-card.template.js"),"utf8");
 const marker="const L=__TRANSLATIONS__;";
 if(!source.includes(marker)||source.indexOf(marker)!==source.lastIndexOf(marker))throw Error("Exactly one translation placeholder required");
 const output=source.replace(marker,"const L="+JSON.stringify(translations)+";");
-const target=resolve(root,"senso4s-basic-card.js");
+const targets=["senso4s-card.js","senso4s-basic-card.js"].map(name=>resolve(root,name));
 if(process.argv.includes("--check")){
-  if(readFileSync(target,"utf8")!==output)throw Error("Generated card out of date: run node scripts/build.mjs");
-  console.info("Translation bundle matches the generated card ("+langs.join(", ")+")");
+  for(const target of targets)if(readFileSync(target,"utf8")!==output)throw Error("Generated card out of date: run node scripts/build.mjs");
+  console.info("Translation bundle matches both Senso4s Card resources ("+langs.join(", ")+")");
 }else{
-  writeFileSync(target,output);
-  console.info("Built senso4s-basic-card.js with "+langs.length+" languages");
+  for(const target of targets)writeFileSync(target,output);
+  console.info("Built Senso4s Card + legacy resource with "+langs.length+" languages");
 }
