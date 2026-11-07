@@ -94,5 +94,8 @@
   "editorDemoMiniNeutral": "Väritesti · Harmaa (tiedot puuttuvat)",
   "editorDemoMiniLowGas": "Väritesti · Kaasuvaroitus 30 %:ssa",
   "editorDemoMiniIconsWarn": "Väritesti · Akku/BLE-varoitus",
-  "editorDemoMiniIconsCritical": "Väritesti · Akku/BLE-kriittinen"
+  "editorDemoMiniIconsCritical": "Väritesti · Akku/BLE-kriittinen",
+  "editorDemoThresholdLow15": "Rajatesti · LOW 15 %:ssa (15 %)",
+  "editorDemoThresholdWarn15": "Rajatesti · Oranssi yli 15 % (20 %)",
+  "editorDemoThresholdBlue15": "Rajatesti · Sininen yli 15 % (25 %)"
 }

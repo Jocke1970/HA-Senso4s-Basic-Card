@@ -94,5 +94,8 @@
   "editorDemoMiniNeutral": "Prueba de color · Gris (sin datos)",
   "editorDemoMiniLowGas": "Prueba de color · Aviso de gas al 30 %",
   "editorDemoMiniIconsWarn": "Prueba de color · Alerta batería/BLE",
-  "editorDemoMiniIconsCritical": "Prueba de color · Batería/BLE críticos"
+  "editorDemoMiniIconsCritical": "Prueba de color · Batería/BLE críticos",
+  "editorDemoThresholdLow15": "Prueba de umbral · LOW al 15 % (15 %)",
+  "editorDemoThresholdWarn15": "Prueba de umbral · Ámbar sobre 15 % (20 %)",
+  "editorDemoThresholdBlue15": "Prueba de umbral · Azul sobre 15 % (25 %)"
 }

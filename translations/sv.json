@@ -94,5 +94,8 @@
   "editorDemoMiniNeutral": "Färgtest · Grå (saknade värden)",
   "editorDemoMiniLowGas": "Färgtest · Låg gasol-varning vid 30 %",
   "editorDemoMiniIconsWarn": "Färgtest · Batteri/BLE-varning",
-  "editorDemoMiniIconsCritical": "Färgtest · Batteri/BLE-kritiskt"
+  "editorDemoMiniIconsCritical": "Färgtest · Batteri/BLE-kritiskt",
+  "editorDemoThresholdLow15": "Tröskeltest · LOW vid 15 % (15 %)",
+  "editorDemoThresholdWarn15": "Tröskeltest · Orange över 15 % (20 %)",
+  "editorDemoThresholdBlue15": "Tröskeltest · Blå över 15 % (25 %)"
 }

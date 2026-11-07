@@ -2,7 +2,7 @@
 
 A read-only Home Assistant Lovelace card for **Senso4s Basic and Senso4s Plus** Bluetooth gas-cylinder scales. The card is called **Senso4s Card** regardless of which model is connected.
 
-**Current beta: 2026.11.0b2 (7 November 2026)** · Stable `main`: legacy 0.1.3, not yet promoted.
+**Current beta: 2026.11.0b3 (7 November 2026)** · Stable `main`: legacy 0.1.3, not yet promoted.
 
 ## Install and upgrade
 
@@ -76,6 +76,14 @@ node --test tests/*.test.cjs
 
 GitHub Actions runs these checks on pushes to `dev`, `beta` and `main`. Follow **dev → beta → main**: code is developed and tested in `dev`, installed for practical testing no earlier than `beta`, then promoted to `main` after acceptance.
 
+## Dynamic LOW threshold (2026.11.0b3)
+
+The card follows the integration's `low_gas` sensor state and its `threshold` attribute. The integration permits 5–50% (default 10%). A sensor state `on` forces red LOW, warning text and visible disabled Refill (if quick actions are enabled); an explicit `off` remains authoritative and is never overridden by a local 10% rule. If LOW is missing, unknown or unavailable, the card compares a valid percentage with the threshold attribute, or 10% as a final fallback. Invalid/missing level without active LOW is neutral.
+
+Both Mini and Standard now follow the same color bands: **red at LOW**, **orange above LOW but below threshold + 10 percentage points**, **blue from threshold + 10 and above**. Inconsistent data (LOW off but level below threshold) stays non-red. The standard bottle fill follows these colors too.
+
+Three safe synthetic scenes demonstrate threshold 15%: at 15% red LOW, 20% orange and 25% blue. The existing 30% LOW preview now exposes `threshold: 30` to match. These previews never update real HA states or settings.
+
 ## Version convention
 
 Starting now:
@@ -85,4 +93,4 @@ Starting now:
 
 Older `0.1.x` versions are retained in `CHANGELOG.md` as historical releases; they are not new versioning conventions.
 
-See [release notes](RELEASE_NOTES_2026.11.0b2.md) and [changelog](CHANGELOG.md). An explicit release request on `beta` publishes a GitHub prerelease only after release-specific tests pass.
+See [release notes](RELEASE_NOTES_2026.11.0b3.md) and [changelog](CHANGELOG.md). An explicit release request on `beta` publishes a GitHub prerelease only after release-specific tests pass.

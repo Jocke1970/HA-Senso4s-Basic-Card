@@ -94,5 +94,8 @@
   "editorDemoMiniNeutral": "Color test · Grey (missing data)",
   "editorDemoMiniLowGas": "Color test · Low-gas warning at 30%",
   "editorDemoMiniIconsWarn": "Color test · Battery/BLE warning",
-  "editorDemoMiniIconsCritical": "Color test · Battery/BLE critical"
+  "editorDemoMiniIconsCritical": "Color test · Battery/BLE critical",
+  "editorDemoThresholdLow15": "Threshold test · LOW at 15% (15%)",
+  "editorDemoThresholdWarn15": "Threshold test · Amber above 15% (20%)",
+  "editorDemoThresholdBlue15": "Threshold test · Blue above 15% (25%)"
 }
