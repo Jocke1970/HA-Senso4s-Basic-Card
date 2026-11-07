@@ -2,7 +2,7 @@
 
 A read-only Home Assistant Lovelace card for **Senso4s Basic and Senso4s Plus** Bluetooth gas-cylinder scales. The card is called **Senso4s Card** regardless of which model is connected.
 
-**Current beta: 2026.11.0b1 (7 November 2026)** · Stable `main`: legacy 0.1.3, not yet promoted.
+**Current beta: 2026.11.0b2 (7 November 2026)** · Stable `main`: legacy 0.1.3, not yet promoted.
 
 ## Install and upgrade
 
@@ -35,8 +35,8 @@ Repository: **[Jocke1970/HA-Senso4s-Card](https://github.com/Jocke1970/HA-Senso4
 
 ## Card features
 
-- **Mini:** compact row with SENSO logo and level-colored cylinder, kg remaining, battery/BLE status icons, optional disabled quick actions and Plus warning marker.
-- **Standard:** remaining gas, level, estimated empty date, battery percentage, RSSI, expandable Recorder history and diagnostics.
+- **Mini:** compact row with SENSO logo, color-coded cylinder, kg and status icons. LOW produces a clear red warning text and an emphasized disabled Refill placeholder (if actions are enabled).
+- **Standard:** remaining gas, battery and RSSI, expandable history and diagnostics. LOW makes the status and bottle red, shows warning text and offers the disabled Refill placeholder when actions are enabled.
 - **Basic and Plus:** automatic model detection using the integration's `usage_mode.attributes.is_plus_model`, with device-registry fallback. Plus adds anomaly, temperature, tilt and motion diagnostics when their entities are available.
 - **Honest data freshness:** last BLE receipt and last HA weight change are separate; neither is proof of a fresh physical weighing.
 - **Recorder history:** gas-mass step chart, battery and RSSI graphs with numerical Y axes, gridlines, date labels, and scales appropriate to each measurement. Real-device history comes from Home Assistant Recorder.
@@ -85,4 +85,4 @@ Starting now:
 
 Older `0.1.x` versions are retained in `CHANGELOG.md` as historical releases; they are not new versioning conventions.
 
-See [release notes](RELEASE_NOTES_2026.11.0b1.md) and [changelog](CHANGELOG.md). An explicit release request on `beta` publishes a GitHub prerelease only after release-specific tests pass.
+See [release notes](RELEASE_NOTES_2026.11.0b2.md) and [changelog](CHANGELOG.md). An explicit release request on `beta` publishes a GitHub prerelease only after release-specific tests pass.

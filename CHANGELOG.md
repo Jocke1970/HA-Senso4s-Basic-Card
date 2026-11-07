@@ -1,5 +1,13 @@
 # Changelog
 
+## 2026.11.0b2 — 2026-11-07 (beta: LOW text and Refill)
+
+- Mini shows red text for integration LOW at any gas level (including 30%).
+- Standard status and cylinder fill also turn red and show LOW text.
+- Refill placeholder appears and is highlighted at LOW in both sizes, but remains disabled; no device service calls.
+- Keep 10% fallback for missing/inactive flags; unknown percentage alone stays neutral.
+- Additional frontend tests cover LOW state, disabled buttons, all four languages and DEMO isolation.
+
 ## 2026.11.0b1 — 2026-11-07 (beta: Senso4s Card naming and version scheme)
 
 - Card name is **Senso4s Card** for both Basic and Plus scales; model distinction remains in diagnostics/subtitle
