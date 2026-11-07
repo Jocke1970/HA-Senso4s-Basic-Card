@@ -1,5 +1,14 @@
 # Changelog
 
+## 2026.11.0b3 — 2026-11-07 (beta: dynamic LOW threshold)
+
+- Use integration `low_gas.attributes.threshold` (5–50%, default 10%) and its authoritative `on/off` status, rather than an independent fixed 10% rule.
+- When LOW is unavailable, calculate a fallback from its threshold attribute or 10% if missing.
+- Move the orange warning band with the LOW threshold; Standard bottle now uses the same red/orange/blue/grey colors as Mini.
+- Keep LOW text and disabled Refill synchronized with this decision.
+- Add three localized threshold-15% demos and consistent threshold-30% LOW demo data.
+- Extend regression coverage for threshold changes, invalid values, sensor state precedence and both layouts.
+
 ## 2026.11.0b2 — 2026-11-07 (beta: LOW text and Refill)
 
 - Mini shows red text for integration LOW at any gas level (including 30%).
