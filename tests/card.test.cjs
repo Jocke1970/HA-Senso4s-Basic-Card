@@ -303,7 +303,7 @@ test('unavailable estimated empty state shows dash instead of invented date', as
 });
 
 test('refill placeholder appears strictly below 10 percent and cannot execute', async () => {
-  for (const [percent, visible] of [[0,true],[9,true],[9.9,true],[10,false],[11,false],[95,false]]) {
+  for (const [percent, visible] of [[0,true],[9,true],[9.9,true],[10,true],[11,false],[95,false]]) {
     const states = makeStates();
     states['sensor.' + base + '_gas_level'] = entity('gas_level', percent);
     const card = new Card();
@@ -312,7 +312,7 @@ test('refill placeholder appears strictly below 10 percent and cannot execute', 
     await Promise.resolve();
     const html = card.shadowRoot.innerHTML;
     assert.equal(html.includes('Refill tank'), visible, String(percent));
-    if (visible) assert.match(html, /class="pending-btn" disabled title="Coming later"/);
+    if (visible) assert.match(html, /class="pending-btn low-refill" disabled title="Refill tank – Coming later"/);
   }
   for (const missing of ['unknown','unavailable']) {
     const states = makeStates();
@@ -463,7 +463,7 @@ test('bundled translations contain synchronized Swedish, English, Spanish and Fi
     assert.deepEqual(Object.keys(dictionaries[locale]).sort(),en,locale);
     for(const key of en)assert.ok(dictionaries[locale][key].trim(),locale+'.'+key);
   }
-  assert.match(js,/VERSION="2026\.11\.0b1"/);
+  assert.match(js,/VERSION="2026\.11\.0b2"/);
 });
 
 test('Spanish, Finnish and fallback locales render without mixing languages', async () => {
@@ -483,7 +483,7 @@ test('show_history and show_diagnostics default to true for existing dashboards'
   const html = card.shadowRoot.innerHTML;
   assert.match(html, /data-toggle="history"/);
   assert.match(html, /data-toggle="diag"/);
-  assert.match(html, /Senso4s Card · 2026\.11\.0b1/);
+  assert.match(html, /Senso4s Card · 2026\.11\.0b2/);
   assert.equal(card.getCardSize(), 6);
 });
 
@@ -800,7 +800,7 @@ test('Mini with show_actions displays only disabled Calibrate between mass and B
 });
 
 test('Mini Refill appears strictly below 10 percent and all actions remain disabled', async () => {
-  for(const [value,shouldRefill] of [[0,true],[9,true],[9.99,true],[10,false],[11,false],[95,false],['unknown',false],['unavailable',false]]){
+  for(const [value,shouldRefill] of [[0,true],[9,true],[9.99,true],[10,true],[11,false],[95,false],['unknown',false],['unavailable',false]]){
     const states=makeStates();
     states['sensor.'+base+'_gas_level']=entity('gas_level',value);
     const card=new Card();card.setConfig({size:'mini',show_actions:true,language:'en'});
@@ -1323,9 +1323,77 @@ test('renamed resources have identical compiled content and HACS metadata', asyn
   card.hass={states:makeStates(),language:'sv'};await Promise.resolve();
   assert.equal(card._title(),'Senso4s');
   assert.match(card.shadowRoot.innerHTML,/<h2>Senso4s<\/h2>/);
-  assert.match(card.shadowRoot.innerHTML,/Senso4s Card · 2026\.11\.0b1/);
+  assert.match(card.shadowRoot.innerHTML,/Senso4s Card · 2026\.11\.0b2/);
   const e=new Editor();e.setConfig({title:'Senso4s Basic',size:'standard'});
   assert.equal(e._config.title,'Senso4s');
   e.setConfig({title:'Min egen titel'});
   assert.equal(e._config.title,'Min egen titel');
+});
+
+
+test('LOW from integration at 30% triggers text and disabled Refill in Mini and Standard', async () => {
+  const states=makeStates();
+  states['sensor.'+base+'_gas_level']=entity('gas_level',30);
+  states['binary_sensor.'+base+'_low_gas']={entity_id:'binary_sensor.'+base+'_low_gas',state:'on'};
+  for(const size of ['mini','standard']){
+    const card=new Card();card.setConfig({size,show_actions:true,language:'sv'});
+    card.hass={states,language:'sv'};await Promise.resolve();
+    const html=card.shadowRoot.innerHTML;
+    assert.equal(card._lowGasWarning(),true);
+    assert.match(html,/Låg gasol/);
+    if(size==='mini'){
+      assert.match(html,/mini-cylinder bad/);
+      assert.match(html,/class="mini-low" role="status">Låg gasol/);
+      assert.match(html,/class="mini-action low-refill" disabled/);
+      assert.match(html,/Fyll på flaskan – Kommer senare/);
+    }else{
+      assert.match(html,/class="status bad">Låg gasol/);
+      assert.match(html,/class="bottle low"/);
+      assert.match(html,/class="pending-btn low-refill" disabled/);
+      assert.match(html,/Fyll på flaskan/);
+    }
+  }
+});
+
+test('unknown level uses explicit sensor LOW and missing/inactive flags do not create a warning', async () => {
+  for(const flag of ['on','off','unknown','unavailable']){
+    const states=makeStates();
+    states['sensor.'+base+'_gas_level']=entity('gas_level','unknown');
+    states['binary_sensor.'+base+'_low_gas']={entity_id:'binary_sensor.'+base+'_low_gas',state:flag};
+    for(const size of ['mini','standard']){
+      const card=new Card();card.setConfig({size,show_actions:true,language:'en'});
+      card.hass={states,language:'en'};await Promise.resolve();
+      assert.equal(card._lowGasWarning(),flag==='on');
+      const html=card.shadowRoot.innerHTML;
+      assert.equal(html.includes('low-refill" disabled'),flag==='on');
+      if(size==='mini')assert.equal(html.includes('class="mini-low"'),flag==='on');
+      else assert.equal(html.includes('class="bottle low"'),flag==='on');
+    }
+  }
+});
+
+test('LOW text and disabled Refill localize across all four languages', async () => {
+  for(const [language,label] of [['sv','Låg gasol'],['en','Low gas'],['es','Poco gas'],['fi','Kaasu vähissä']]){
+    for(const size of ['mini','standard']){
+      const card=new Card();card.setConfig({size,show_actions:true,language,demo_mode:'mini_low_gas'});
+      card.hass={states:{},language,callApi:()=>{throw Error('No HA calls in DEMO');}};
+      await Promise.resolve();
+      assert.match(card.shadowRoot.innerHTML,new RegExp(label));
+      assert.match(card.shadowRoot.innerHTML,/low-refill" disabled/);
+    }
+  }
+});
+
+test('8 percent fallback shows LOW text; 15 percent no flag keeps amber without refill', async () => {
+  for(const [mode,low] of [['mini_red',true],['mini_amber',false],['mini_blue',false],['mini_neutral',false]]){
+    for(const size of ['mini','standard']){
+      const card=new Card();card.setConfig({size,show_actions:true,language:'sv',demo_mode:mode});
+      card.hass={states:{},language:'sv'};await Promise.resolve();
+      assert.equal(card._lowGasWarning(),low,mode);
+      const html=card.shadowRoot.innerHTML;
+      assert.equal(html.includes('Fyll på flaskan'),low,mode+'/'+size);
+      if(size==='mini')assert.equal(html.includes('class="mini-low"'),low);
+      else assert.equal(html.includes('class="bottle low"'),low);
+    }
+  }
 });
