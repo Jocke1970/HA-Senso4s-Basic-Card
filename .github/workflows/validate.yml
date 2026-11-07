@@ -8,6 +8,8 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+      - name: Verify bundled translations
+        run: node scripts/build.mjs --check
       - name: Check JavaScript syntax
         run: node --check senso4s-basic-card.js
       - name: Run frontend component tests
