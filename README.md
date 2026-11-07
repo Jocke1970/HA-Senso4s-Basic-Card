@@ -31,7 +31,7 @@ Existing Lovelace cards using `type: custom:senso4s-basic-card` continue to work
 
 The repository also retains `senso4s-basic-card.js` as an identical legacy compatibility copy for manual installations. **HACS now uses the renamed `senso4s-card.js` file.** If your existing dashboard references `/local/senso4s-basic-card.js`, update the resource URL after the beta upgrade; do not load both resources simultaneously. Your saved card configuration and selected scale can stay as they are. The old default title `Senso4s Basic` or `Senso4s Plus` is displayed as `Senso4s`, while unrelated custom titles remain intact.
 
-The repository currently has the GitHub URL `Jocke1970/HA-Senso4s-Basic-Card`. Its intended new name is `HA-Senso4s-Card`; the GitHub repository rename must be performed separately in GitHub settings and is **not** required for the JavaScript compatibility changes.
+Repository: **[Jocke1970/HA-Senso4s-Card](https://github.com/Jocke1970/HA-Senso4s-Card)**. GitHub has been renamed; existing Lovelace alias support remains for backwards compatibility.
 
 ## Card features
 
@@ -85,4 +85,4 @@ Starting now:
 
 Older `0.1.x` versions are retained in `CHANGELOG.md` as historical releases; they are not new versioning conventions.
 
-See [release notes](RELEASE_NOTES_2026.11.0b1.md) and [changelog](CHANGELOG.md).
+See [release notes](RELEASE_NOTES_2026.11.0b1.md) and [changelog](CHANGELOG.md). An explicit release request on `beta` publishes a GitHub prerelease only after release-specific tests pass.
