@@ -356,7 +356,7 @@ test('Swedish placeholders are localized, disabled and preserve estimated empty'
   await Promise.resolve();
   assert.match(card.shadowRoot.innerHTML, /Kalibrera vågen/);
   assert.match(card.shadowRoot.innerHTML, /Endast inställningar/);
-  assert.equal(card.shadowRoot.innerHTML.split('class="pending-btn" disabled').length - 1, 3);
+  assert.equal((card.shadowRoot.innerHTML.match(/class="pending-btn(?: low-refill)?" disabled/g)||[]).length,3);
 });
 
 test('usage modes render their matching colored icons and accessible localized titles', async () => {
