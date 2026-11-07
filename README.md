@@ -72,11 +72,15 @@ The editor's **Test device (preview only)** selector simulates Basic/Plus, warni
 
 Refill, calibration and settings buttons are **disabled placeholders**, not working commands. The card cannot change the scale, refill state or integration options.
 
-## Upgrading from the old card
+## Contribute a translation
 
-The new file is `senso4s-card.js` and the preferred Lovelace type is `custom:senso4s-card`. Existing dashboards using `custom:senso4s-basic-card` continue to work through a compatibility alias; changing existing card YAML is optional.
+Want Senso4s Card in another language? You can help by creating a translation file:
 
-If you previously registered `/local/senso4s-basic-card.js`, replace that resource with `/local/senso4s-card.js` after installing the new file. **Do not load both scripts at once.** Refresh the browser cache. Custom titles are preserved, while the old default Basic/Plus title is shown as **Senso4s**.
+1. Copy [`translations/en.json`](translations/en.json) to a new file, for example `translations/de.json`.
+2. Translate the **text values** into your language. Keep all JSON keys and any placeholders unchanged; save the file as UTF-8.
+3. Open a pull request with your new language file. The language also needs to be registered in the build script and the card's language selector before it can be included in a release.
+
+Translations are **bundled into `senso4s-card.js`**. Copying a JSON file into Home Assistant does not automatically enable the language.
 
 ## More information
 
