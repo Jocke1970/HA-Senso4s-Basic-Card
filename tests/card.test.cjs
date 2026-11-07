@@ -481,7 +481,7 @@ test('show_history and show_diagnostics default to true for existing dashboards'
   const html = card.shadowRoot.innerHTML;
   assert.match(html, /data-toggle="history"/);
   assert.match(html, /data-toggle="diag"/);
-  assert.match(html, /Senso4s Basic · 0\.1\.5b6/);
+  assert.match(html, /Senso4s Basic · 0\.1\.5b7/);
   assert.equal(card.getCardSize(), 6);
 });
 
@@ -1234,7 +1234,7 @@ test('Mini color preview scenarios use synthetic Basic data with all requested s
     await Promise.resolve();
     const html=card.shadowRoot.innerHTML;
     assert.equal(card._model(),'basic',sc.mode);
-    assert.equal(card._val('gas_level'),sc.level,sc.mode);
+    assert.equal(card._val('gas_level'),sc.level==='unknown'?null:sc.level,sc.mode);
     assert.equal(card._cylinderSeverity(),sc.color,sc.mode);
     assert.match(html,new RegExp('class="mini-cylinder '+sc.color+'"'),sc.mode);
     assert.match(html,/DEMO – fiktiv enhet/,sc.mode);
@@ -1255,8 +1255,8 @@ test('Mini icons warn and turn critical for battery/BLE synthetic previews', asy
   ]){
     const card=new Card();card.setConfig({size:'mini',demo_mode:mode,language:'sv'});
     card.hass={states:{},language:'sv'};await Promise.resolve();
-    assert.equal(card._val('battery'),battery,mode);
-    assert.equal(card._val('rssi'),rssi,mode);
+    assert.equal(card._val('battery'),battery==='unknown'?null:battery,mode);
+    assert.equal(card._val('rssi'),rssi==='unknown'?null:rssi,mode);
     assert.equal(card._batterySeverity(),expected,mode);
     assert.equal(card._signalSeverity(),expected,mode);
     assert.match(card.shadowRoot.innerHTML,new RegExp('class="mini-status '+expected+'"'),mode);
@@ -1284,7 +1284,9 @@ test('color demos are exposed in visual editor and persist when switching modes'
 });
 
 test('new color preview modes do not change the independent real Basic view', async () => {
-  const states=makeStates(); const card=new Card();
+  const states=makeStates();
+  states['sensor.'+base+'_usage_mode']=entity('usage_mode','Heating',{is_plus_model:false});
+  const card=new Card();
   card.setConfig({language:'sv',size:'mini',demo_mode:'off'});
   card.hass={states,language:'sv'};await Promise.resolve();
   assert.equal(card._model(),'basic');
