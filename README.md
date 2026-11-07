@@ -2,7 +2,7 @@
 
 A read-only Home Assistant Lovelace card for **Senso4s Basic and Senso4s Plus** Bluetooth gas-cylinder scales. The card is called **Senso4s Card** regardless of which model is connected.
 
-**Current beta: 2026.11.0b3 (7 November 2026)** · Stable `main`: legacy 0.1.3, not yet promoted.
+**Current beta: 2026.11.0b3 (7 November 2026)** · Stable `main`: 2026.11.0.
 
 ## Install and upgrade
 
@@ -24,14 +24,6 @@ history_hours: 168
 show_history: true
 show_diagnostics: true
 ```
-
-### Backward compatibility
-
-Existing Lovelace cards using `type: custom:senso4s-basic-card` continue to work: the new JavaScript registers **both** custom elements, while the visual picker shows only **Senso4s Card**. The old editor name works as an alias too.
-
-The repository also retains `senso4s-basic-card.js` as an identical legacy compatibility copy for manual installations. **HACS now uses the renamed `senso4s-card.js` file.** If your existing dashboard references `/local/senso4s-basic-card.js`, update the resource URL after the beta upgrade; do not load both resources simultaneously. Your saved card configuration and selected scale can stay as they are. The old default title `Senso4s Basic` or `Senso4s Plus` is displayed as `Senso4s`, while unrelated custom titles remain intact.
-
-Repository: **[Jocke1970/HA-Senso4s-Card](https://github.com/Jocke1970/HA-Senso4s-Card)**. GitHub has been renamed; existing Lovelace alias support remains for backwards compatibility.
 
 ## Card features
 
@@ -63,9 +55,19 @@ In the visual editor, select a card size and use **Test device (preview only)**.
 
 To finish, set `demo_mode: off` (or choose the real device in the editor). DEMO values do not represent the actual cylinder.
 
+## Contribute a translation
+
+Want Senso4s Card in another language? You can help by creating a translation file:
+
+1. Copy [`translations/en.json`](translations/en.json) to a new file, for example `translations/de.json`.
+2. Translate the **text values** into your language. Keep all JSON keys and any placeholders unchanged; save the file as UTF-8.
+3. Open a pull request with your new language file. The language also needs to be registered in the build script and the card's language selector before it can be included in a release.
+
+Translations are **bundled into `senso4s-card.js`**. Copying a JSON file into Home Assistant does not automatically enable the language.
+
 ## Build and validation
 
-The single-file card is built from `src/senso4s-card.template.js` plus `translations/{en,sv,es,fi}.json`. The build also writes the identical legacy resource for compatibility.
+The single-file card is built from `src/senso4s-card.template.js` plus `translations/{en,sv,es,fi}.json`. The build produces the bundled JavaScript module used by the dashboard.
 
 ```bash
 node scripts/build.mjs
@@ -89,8 +91,6 @@ Three safe synthetic scenes demonstrate threshold 15%: at 15% red LOW, 20% orang
 Starting now:
 
 - Beta: `YYYY.MM.patchbN`, for example `2026.11.0b1`.
-- Stable: `YYYY.MM.patch`, for example `2026.11.0` **after** successful beta acceptance.
-
-Older `0.1.x` versions are retained in `CHANGELOG.md` as historical releases; they are not new versioning conventions.
+- Stable: `YYYY.MM.patch`, for example `2026.11.0`.
 
 See [release notes](RELEASE_NOTES_2026.11.0b3.md) and [changelog](CHANGELOG.md). An explicit release request on `beta` publishes a GitHub prerelease only after release-specific tests pass.
