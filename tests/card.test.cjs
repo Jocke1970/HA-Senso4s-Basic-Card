@@ -463,7 +463,7 @@ test('bundled translations contain synchronized Swedish, English, Spanish and Fi
     assert.deepEqual(Object.keys(dictionaries[locale]).sort(),en,locale);
     for(const key of en)assert.ok(dictionaries[locale][key].trim(),locale+'.'+key);
   }
-  assert.match(js,/VERSION="2026\.11\.0b2"/);
+  assert.match(js,/VERSION="2026\.11\.0b3"/);
 });
 
 test('Spanish, Finnish and fallback locales render without mixing languages', async () => {
@@ -483,7 +483,7 @@ test('show_history and show_diagnostics default to true for existing dashboards'
   const html = card.shadowRoot.innerHTML;
   assert.match(html, /data-toggle="history"/);
   assert.match(html, /data-toggle="diag"/);
-  assert.match(html, /Senso4s Card · 2026\.11\.0b2/);
+  assert.match(html, /Senso4s Card · 2026\.11\.0b3/);
   assert.equal(card.getCardSize(), 6);
 });
 
@@ -1323,7 +1323,7 @@ test('renamed resources have identical compiled content and HACS metadata', asyn
   card.hass={states:makeStates(),language:'sv'};await Promise.resolve();
   assert.equal(card._title(),'Senso4s');
   assert.match(card.shadowRoot.innerHTML,/<h2>Senso4s<\/h2>/);
-  assert.match(card.shadowRoot.innerHTML,/Senso4s Card · 2026\.11\.0b2/);
+  assert.match(card.shadowRoot.innerHTML,/Senso4s Card · 2026\.11\.0b3/);
   const e=new Editor();e.setConfig({title:'Senso4s Basic',size:'standard'});
   assert.equal(e._config.title,'Senso4s');
   e.setConfig({title:'Min egen titel'});
@@ -1348,7 +1348,7 @@ test('LOW from integration at 30% triggers text and disabled Refill in Mini and 
       assert.match(html,/Fyll på flaskan – Kommer senare/);
     }else{
       assert.match(html,/class="status bad">Låg gasol/);
-      assert.match(html,/class="bottle low"/);
+      assert.match(html,/class="bottle bad"/);
       assert.match(html,/class="pending-btn low-refill" disabled/);
       assert.match(html,/Fyll på flaskan/);
     }
@@ -1367,7 +1367,7 @@ test('unknown level uses explicit sensor LOW and missing/inactive flags do not c
       const html=card.shadowRoot.innerHTML;
       assert.equal(html.includes('low-refill" disabled'),flag==='on');
       if(size==='mini')assert.equal(html.includes('class="mini-low"'),flag==='on');
-      else assert.equal(html.includes('class="bottle low"'),flag==='on');
+      else assert.equal(html.includes('class="bottle bad"'),flag==='on');
     }
   }
 });
@@ -1393,7 +1393,100 @@ test('8 percent fallback shows LOW text; 15 percent no flag keeps amber without 
       const html=card.shadowRoot.innerHTML;
       assert.equal(html.includes('Fyll på flaskan'),low,mode+'/'+size);
       if(size==='mini')assert.equal(html.includes('class="mini-low"'),low);
-      else assert.equal(html.includes('class="bottle low"'),low);
+      else assert.equal(html.includes('class="bottle bad"'),low);
     }
   }
+});
+
+
+test('Senso4s configurable LOW threshold adjusts both Mini and Standard colors and Refill', async () => {
+  const cases=[
+    [10,10,'on','bad'],[10,11,'off','warn'],[10,19,'off','warn'],[10,20,'off','normal'],
+    [15,15,'on','bad'],[15,16,'off','warn'],[15,24,'off','warn'],[15,25,'off','normal'],
+    [20,20,'on','bad'],[20,21,'off','warn'],[20,29,'off','warn'],[20,30,'off','normal'],
+    [50,50,'on','bad'],[50,59,'off','warn'],[50,60,'off','normal']
+  ];
+  for(const [threshold,level,flag,color] of cases){
+    const states=makeStates();
+    states['sensor.'+base+'_gas_level']=entity('gas_level',level);
+    states['binary_sensor.'+base+'_low_gas']={entity_id:'binary_sensor.'+base+'_low_gas',state:flag,attributes:{threshold}};
+    for(const size of ['mini','standard']){
+      const card=new Card();card.setConfig({size,show_actions:true,language:'sv'});
+      card.hass={states,language:'sv'};await Promise.resolve();
+      const html=card.shadowRoot.innerHTML,low=flag==='on';
+      assert.equal(card._lowThreshold(),threshold);
+      assert.equal(card._lowGasWarning(),low);
+      assert.equal(card._cylinderSeverity(),color);
+      assert.equal(html.includes('Fyll på flaskan'),low);
+      if(size==='mini'){
+        assert.match(html,new RegExp('mini-cylinder '+color));
+        assert.equal(html.includes('class="mini-low"'),low);
+      }else{
+        assert.match(html,new RegExp('class="bottle '+color+'"'));
+        assert.equal(html.includes('class="status bad">Låg gasol'),low);
+      }
+    }
+  }
+});
+
+test('OFF LOW state wins over local fallback even below the configured threshold', async () => {
+  for(const [flag,level,low,color] of [['off',8,false,'warn'],['on',30,true,'bad'],['off',20,false,'warn'],['off',25,false,'normal']]){
+    const states=makeStates();
+    states['sensor.'+base+'_gas_level']=entity('gas_level',level);
+    states['binary_sensor.'+base+'_low_gas']={entity_id:'binary_sensor.'+base+'_low_gas',state:flag,attributes:{threshold:15}};
+    const card=new Card();card.setConfig({size:'mini',show_actions:true,language:'sv'});
+    card.hass={states,language:'sv'};await Promise.resolve();
+    assert.equal(card._lowGasWarning(),low);
+    assert.equal(card._cylinderSeverity(),color);
+    assert.equal(card.shadowRoot.innerHTML.includes('class="mini-low"'),low);
+  }
+});
+
+test('missing or unavailable LOW uses threshold attribute or default ten percent', async () => {
+  const cases=[
+    ['unavailable',15,15,true,'bad',15],['unknown',20,25,false,'warn',20],
+    ['unavailable',20,30,false,'normal',20],[null,null,10,true,'bad',10],
+    [null,null,15,false,'warn',10],['off',15,8,false,'warn',15],
+    ['unavailable',200,11,false,'warn',10],['unknown',0,10,true,'bad',10],
+    ['unavailable',15,'unknown',false,'neutral',15]
+  ];
+  for(const [flag,threshold,level,low,color,effective] of cases){
+    const states=makeStates();
+    states['sensor.'+base+'_gas_level']=entity('gas_level',level);
+    if(flag!==null)states['binary_sensor.'+base+'_low_gas']={entity_id:'binary_sensor.'+base+'_low_gas',state:flag,attributes:{threshold}};
+    const card=new Card();card.setConfig({size:'mini',language:'sv',show_actions:true});
+    card.hass={states,language:'sv'};await Promise.resolve();
+    assert.equal(card._lowThreshold(),effective);
+    assert.equal(card._lowGasWarning(),low);
+    assert.equal(card._cylinderSeverity(),color);
+  }
+});
+
+test('15 percent threshold demo scenarios work in Mini and Standard and cannot alter HA', async () => {
+  const cases=[
+    ['mini_threshold_low_15',15,'on','bad',true],
+    ['mini_threshold_warn_15',15,'off','warn',false],
+    ['mini_threshold_blue_15',15,'off','normal',false],
+    ['mini_low_gas',30,'on','bad',true],
+    ['mini_red',10,'on','bad',true]
+  ];
+  for(const [mode,threshold,state,color,low] of cases){
+    for(const size of ['mini','standard']){
+      const states=makeStates(),before=JSON.stringify(states);
+      const card=new Card();card.setConfig({size,show_actions:true,language:'sv',demo_mode:mode});
+      card.hass={states,language:'sv',callApi:()=>{throw Error('No device actions in DEMO');}};
+      await Promise.resolve();
+      assert.equal(card._state('low_gas').attributes.threshold,threshold,mode);
+      assert.equal(card._val('low_gas'),state,mode);
+      assert.equal(card._lowGasWarning(),low,mode);
+      assert.equal(card._cylinderSeverity(),color,mode);
+      assert.equal(card.shadowRoot.innerHTML.includes('Fyll på flaskan'),low,mode);
+      if(size==='mini')assert.match(card.shadowRoot.innerHTML,new RegExp('mini-cylinder '+color));
+      else assert.match(card.shadowRoot.innerHTML,new RegExp('class="bottle '+color+'"'));
+      assert.equal(JSON.stringify(states),before);
+    }
+  }
+  const editor=new Editor();editor.setConfig({size:'mini',language:'sv'});
+  editor.hass={states:makeStates(),language:'sv'};
+  for(const [mode] of cases.slice(0,3))assert.ok(editor.shadowRoot.innerHTML.includes('value="'+mode+'"'));
 });
