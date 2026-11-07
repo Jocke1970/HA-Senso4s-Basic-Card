@@ -455,7 +455,7 @@ test('diagnostic panel has a symmetric two-by-two grid with icons below labels',
 });
 
 test('bundled translations contain synchronized Swedish, English, Spanish and Finnish dictionaries', () => {
-  const match=js.match(/const L=(\{[\s\S]*?\});\s*const LOCALES=/);
+  const match=js.match(/const L=(\{[\s\S]*?\});\s*function normalizeTitle/);
   assert.ok(match,'generated translation dictionary exists');
   const dictionaries=JSON.parse(match[1]);
   const en=Object.keys(dictionaries.en).sort();

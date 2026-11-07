@@ -1,5 +1,14 @@
 # Changelog
 
+## 2026.11.0b1 — 2026-11-07 (beta: Senso4s Card naming and version scheme)
+
+- Card name is **Senso4s Card** for both Basic and Plus scales; model distinction remains in diagnostics/subtitle
+- Adopt `YYYY.MM.patchbN` beta versions, beginning with `2026.11.0b1`; stable will be `2026.11.0` after practical acceptance
+- New primary `custom:senso4s-card`, visual editor, `senso4s-card.js` and HACS filename
+- Retain the old Lovelace type/editor and identical legacy JavaScript file as compatibility aliases; do not load both resources simultaneously
+- Preserve saved Basic/Plus configurations, map old default titles to Senso4s, retain custom titles, demos, history and translations
+- GitHub repository rename to `HA-Senso4s-Card` still requires a separate GitHub Settings action
+
 ## 0.1.5b7 — 2026-11-07 (dev Mini color preview tests)
 
 - Add seven safe visual DEMO scenarios for Mini cylinder colors and battery/BLE icons: blue 20%, amber 15%, red 8%, grey missing-data, low-gas warning at 30%, battery/BLE warning and critical
