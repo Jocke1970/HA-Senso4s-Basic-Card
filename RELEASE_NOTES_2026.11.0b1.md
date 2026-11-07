@@ -23,5 +23,5 @@ The Senso4s Lovelace card supports Basic and Plus with a single product name and
 - Manual verification remaining: migrated HACS resource in actual Home Assistant, legacy type and new type, Mini color demos, real Basic and Plus simulations.
 - `main` remains old stable 0.1.3 until approval.
 
-### Repository rename
-The GitHub repository still uses `HA-Senso4s-Basic-Card` at publishing time. Rename it to `HA-Senso4s-Card` separately through GitHub Settings → General → Repository name; this is not part of the code change.
+### Repository
+Repository renamed and verified: [Jocke1970/HA-Senso4s-Card](https://github.com/Jocke1970/HA-Senso4s-Card). The old Lovelace card type remains available only as a compatibility alias.
