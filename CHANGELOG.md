@@ -1,5 +1,114 @@
 # Changelog
 
+## 2026.11.0 — 2026-11-07 (first stable Senso4s Card)
+
+- First stable calendar-version release, following the tested `2026.11.0b3` prerelease.
+- Unified **Senso4s Card** name and `custom:senso4s-card` for Senso4s Basic and Plus; retain a legacy card-type and JavaScript-file alias.
+- Compact Mini and detailed Standard layouts, configurable sections, visual editor, four interface languages and synthetic preview modes.
+- Gas remaining, battery, Bluetooth signal, read-only Recorder history, device diagnostics, BLE freshness and Plus anomaly indicators.
+- LOW status follows the integration's configurable `low_gas.attributes.threshold` and controls matching cylinder colors, warning text and a disabled Refill placeholder in both layouts.
+- Mini and Standard share blue/orange/red/grey severity bands; no device commands or state modifications.
+- Verified by automated regression tests and user field checks with a real Senso4s Basic, Plus simulations, charts, translation and LOW-boundary previews.
+
+## 2026.11.0b3 — 2026-11-07 (beta: dynamic LOW threshold)
+
+- Use integration `low_gas.attributes.threshold` (5–50%, default 10%) and its authoritative `on/off` status, rather than an independent fixed 10% rule.
+- When LOW is unavailable, calculate a fallback from its threshold attribute or 10% if missing.
+- Move the orange warning band with the LOW threshold; Standard bottle now uses the same red/orange/blue/grey colors as Mini.
+- Keep LOW text and disabled Refill synchronized with this decision.
+- Add three localized threshold-15% demos and consistent threshold-30% LOW demo data.
+- Extend regression coverage for threshold changes, invalid values, sensor state precedence and both layouts.
+
+## 2026.11.0b2 — 2026-11-07 (beta: LOW text and Refill)
+
+- Mini shows red text for integration LOW at any gas level (including 30%).
+- Standard status and cylinder fill also turn red and show LOW text.
+- Refill placeholder appears and is highlighted at LOW in both sizes, but remains disabled; no device service calls.
+- Keep 10% fallback for missing/inactive flags; unknown percentage alone stays neutral.
+- Additional frontend tests cover LOW state, disabled buttons, all four languages and DEMO isolation.
+
+## 2026.11.0b1 — 2026-11-07 (beta: Senso4s Card naming and version scheme)
+
+- Card name is **Senso4s Card** for both Basic and Plus scales; model distinction remains in diagnostics/subtitle
+- Adopt `YYYY.MM.patchbN` beta versions, beginning with `2026.11.0b1`; stable will be `2026.11.0` after practical acceptance
+- New primary `custom:senso4s-card`, visual editor, `senso4s-card.js` and HACS filename
+- Retain the old Lovelace type/editor and identical legacy JavaScript file as compatibility aliases; do not load both resources simultaneously
+- Preserve saved Basic/Plus configurations, map old default titles to Senso4s, retain custom titles, demos, history and translations
+- GitHub repository rename to `HA-Senso4s-Card` still requires a separate GitHub Settings action
+
+## 0.1.5b7 — 2026-11-07 (dev Mini color preview tests)
+
+- Add seven safe visual DEMO scenarios for Mini cylinder colors and battery/BLE icons: blue 20%, amber 15%, red 8%, grey missing-data, low-gas warning at 30%, battery/BLE warning and critical
+- All color scenarios are synthetic Basic previews and never alter the real Senso4s integration, its entity values or Recorder data
+- Add visual-editor choices in Swedish, English, Finnish and Spanish
+- Cover DEMO scene outputs, color severity, safe isolation, editor switching and unchanged real Basic card through automated tests
+- Retain existing Plus demo scenarios and 0.1.5b6 history grids; next step CI then beta promotion (never install dev)
+
+## 0.1.5b6 — 2026-11-04 (dev history axes and gridlines)
+
+- Add numeric Y-axis ticks, horizontal gridlines and localized time/date ticks to gas mass, battery and RSSI history charts
+- Prefer 0–reported gas capacity (e.g. P10 = 0–10 kg) and expand scale to keep out-of-range historical values visible
+- Keep actual recorded min/max separate from axis scale and retain the discrete step plot without changing Recorder values
+- Dev only; beta/main untouched pending visual review
+
+
+## 0.1.5b5 — 2026-11-04 (dev translations and Plus diagnostics)
+
+- Move translations into separate English, Swedish, Spanish and Finnish JSON sources, bundle into one HACS JS file with reproducible Node build
+- Add locale selection for sv/en/es/fi, automatic HA locale fallback to English, and language-key consistency checks
+- Hide genuinely disabled Plus anomaly sensors, show actionable Problem messages for explicitly unavailable sensors, keep unknown states neutral
+- Add simulated Plus unavailable scenario; update editor and regression tests
+- Dev only; beta/main unchanged until live visual review
+
+
+## 0.1.5b4 — 2026-11-04 (dev Mini dual-brand and dynamic gas-color fix)
+
+- Restore **both icons** in Mini: original SENSO logo beside the gas-cylinder pictogram
+- Dynamically color the Mini cylinder blue at 20%+, amber at 11–19%, red at 10% or less or with an active `low_gas` warning, and neutral for missing/invalid values
+- Keep the same card entity selection and Mini/Standard Basic/Plus layouts
+- Add responsive smaller dual-icon layout for narrow dashboard columns
+- Preserve disabled Refill/Calibration placeholders, read-only behavior and isolated demo fixtures
+- 71 simulated frontend tests pass, with regression cases for both icons, Plus, missing level and configured low-gas warning
+- Dev only; beta/main unchanged and new Mini layout awaits visual verification in HA
+
+## 0.1.5b3 — 2026-11-04 (dev demo history correction)
+
+- Distinguish synthetic demonstration history from live Home Assistant Recorder history using Swedish and English labels
+- Keep Recorder attribution unchanged for actual devices; no new HA requests or service calls
+- Add regression checks for both demo and real Recorder labels; 68 simulated checks pass
+- Plus Standard normal/tilt-warning layout visually reviewed from user screenshots; disabled-entity and Mini Plus views still need visual confirmation
+- Still dev only; beta and main unchanged
+
+## 0.1.5b2 — 2026-11-04 (dev Mini icon regression fix)
+
+- Restore the original blue `mdi:gas-cylinder` icon in Mini; SENSO logo remains in the Standard header
+- Preserve the original compact Mini layout for Basic and Plus (including synthetic previews)
+- Update frontend regression tests: 66 simulated checks pass
+- Still dev only; beta/main remain unchanged
+
+## 0.1.5b1 — 2026-11-04 (dev preview: Basic/Plus)
+
+- One backward-compatible Lovelace card for Basic and Plus, with model detection using `usage_mode.attributes.is_plus_model` and HA's device registry as fallback
+- Plus-specific diagnostics: overall, temperature, incline/tilt and motion anomaly indicators
+- Disabled or unavailable Plus entity states remain neutral/unknown; missing data is never interpreted as healthy
+- Mini shows the Plus model and a warning when the aggregate or any individual anomaly flag is active; Standard adds expanded Plus diagnostics
+- Add isolated fictional Basic and Plus test fixtures, including normal, active tilt warning and disabled-entities cases
+- Add explicit `demo_mode` selection to the native visual editor: `off | basic | plus | plus_warning | plus_disabled`
+- No test values are written to Home Assistant; demo charts are synthetic and never call the Recorder API
+- Swedish/English dictionaries expanded in sync to 84 keys each
+- 65 simulated frontend tests pass; browser/dashboard visual confirmation and beta promotion remain outstanding
+- Stable `main` stays 0.1.3, and real Refill/Calibrate service actions are not included
+
+## 0.1.4b1 — 2026-11-04 (dev preview)
+
+- Replace the Standard and Mini gas-cylinder placeholder icons with an image based on the user-supplied original SENSO artwork
+- Use a clean white rounded badge, charcoal-and-lime branding, transparent outside and no artificial shadows
+- Embed the 128 px PNG as a data URI in the single JavaScript file; no extra asset installation or network fetching
+- Keep all sensors, Mini width, visual editor, i18n, and disabled Refill/Calibrate placeholders unchanged
+- Add branding regression tests; 52 simulated frontend tests pass
+- Integration brand icon staged separately in `Jocke1970/senso4s_ble` `dev` at `custom_components/senso4s/brand/icon.png`; neither repository is promoted to beta/main
+
+
 ## 0.1.3 — 2026-11-03 (stable)
 
 - Mini now requests the same 12-column default width as Standard in Home Assistant Sections layouts while retaining its compact single-row height

@@ -4,7 +4,7 @@ const fs = require('node:fs');
 const vm = require('node:vm');
 const path = require('node:path');
 
-const js = fs.readFileSync(path.join(__dirname, '..', 'senso4s-basic-card.js'), 'utf8');
+const js = fs.readFileSync(path.join(__dirname, '..', 'senso4s-card.js'), 'utf8');
 const registry = new Map();
 class HTMLElementMock {
   attachShadow() {
@@ -26,9 +26,11 @@ const sandbox = {
   CustomEvent: class CustomEvent { constructor(type,options){this.type=type;Object.assign(this,options);} },
   console,
 };
-vm.runInNewContext(js, sandbox, { filename: 'senso4s-basic-card.js' });
-const Card = registry.get('senso4s-basic-card');
-const Editor = registry.get('senso4s-basic-card-editor');
+vm.runInNewContext(js, sandbox, { filename: 'senso4s-card.js' });
+const Card = registry.get('senso4s-card');
+const Editor = registry.get('senso4s-card-editor');
+const LegacyCard = registry.get('senso4s-basic-card');
+const LegacyEditor = registry.get('senso4s-basic-card-editor');
 const base = 'senso4s_gas_sensor_5d32';
 const oldTime = '2026-11-02T21:00:54+00:00';
 const newTime = '2026-11-02T21:30:54+00:00';
@@ -166,6 +168,49 @@ test('English diagnostic timestamps are translated', async () => {
   assert.match(card.shadowRoot.innerHTML, /Last weight change in HA/);
 });
 
+test('history mass chart has a 0–10 kg axis with labeled horizontal gridlines and date ticks', async () => {
+  const card=new Card();card.setConfig({language:'sv',history_hours:168});
+  card.hass={states:{...makeStates(),['sensor.'+base+'_gas_capacity']:entity('gas_capacity',10)},language:'sv'};
+  await Promise.resolve();
+  card._history=[[{entity_id:'sensor.'+base+'_gas_remaining',state:'0',last_changed:new Date(Date.now()-6*86400000).toISOString()},
+                  {entity_id:'sensor.'+base+'_gas_remaining',state:'9.7',last_changed:new Date(Date.now()-2*86400000).toISOString()},
+                  {entity_id:'sensor.'+base+'_gas_remaining',state:'9',last_changed:new Date().toISOString()}]];
+  const graph=card._chart();
+  assert.match(graph,/0\.00–9\.70 kg/); // actual recorded min/max, separate from the axis
+  for(const n of [0,2,4,6,8,10])assert.match(graph,new RegExp('class="chart-label"[^>]*>'+n+'<'));
+  assert.equal((graph.match(/class="chart-grid"/g)||[]).length,6);
+  assert.equal((graph.match(/class="chart-time"/g)||[]).length,3);
+  assert.match(graph,/ H[0-9.]+ V[0-9.]+/);
+});
+
+test('mass chart expands beyond cylinder capacity instead of clipping recorded values', async () => {
+  const card=new Card();card.setConfig({language:'en'});
+  card.hass={states:{...makeStates(),['sensor.'+base+'_gas_capacity']:entity('gas_capacity',10)},language:'en'};
+  await Promise.resolve();
+  card._history=[[{entity_id:'sensor.'+base+'_gas_remaining',state:'12.2',last_changed:new Date().toISOString()}]];
+  const graph=card._chart();
+  assert.match(graph,/12\.20–12\.20 kg/);
+  assert.match(graph,/class="chart-label"[^>]*>12.5</);
+});
+
+test('battery and Bluetooth history get distinct units and numeric Y axes', async () => {
+  const card=new Card();card.setConfig({language:'en'});
+  card.hass={states:makeStates(),language:'en'};
+  await Promise.resolve();
+  const now=new Date().toISOString();
+  card._history=[[{entity_id:'sensor.'+base+'_battery',state:'55',last_changed:now}],
+                 [{entity_id:'sensor.'+base+'_signal_strength',state:'-59',last_changed:now}]];
+  card._view='battery';
+  const battery=card._chart();
+  assert.match(battery,/class="chart-label chart-unit"[^>]*>%</);
+  for(const n of [0,25,50,75,100])assert.match(battery,new RegExp('class="chart-label"[^>]*>'+n+'<'));
+  card._view='rssi';
+  const rssi=card._chart();
+  assert.match(rssi,/class="chart-label chart-unit"[^>]*>dBm</);
+  assert.match(rssi,/class="chart-grid"/);
+  assert.match(rssi,/class="chart-label"[^>]*>−?-[0-9]+</);
+});
+
 test('history only shows mass, battery, RSSI charts without a change log', async () => {
   const card = new Card();
   card.setConfig({ language: 'sv' });
@@ -258,7 +303,7 @@ test('unavailable estimated empty state shows dash instead of invented date', as
 });
 
 test('refill placeholder appears strictly below 10 percent and cannot execute', async () => {
-  for (const [percent, visible] of [[0,true],[9,true],[9.9,true],[10,false],[11,false],[95,false]]) {
+  for (const [percent, visible] of [[0,true],[9,true],[9.9,true],[10,true],[11,false],[95,false]]) {
     const states = makeStates();
     states['sensor.' + base + '_gas_level'] = entity('gas_level', percent);
     const card = new Card();
@@ -267,7 +312,7 @@ test('refill placeholder appears strictly below 10 percent and cannot execute', 
     await Promise.resolve();
     const html = card.shadowRoot.innerHTML;
     assert.equal(html.includes('Refill tank'), visible, String(percent));
-    if (visible) assert.match(html, /class="pending-btn" disabled title="Coming later"/);
+    if (visible) assert.match(html, /class="pending-btn low-refill" disabled title="Refill tank – Coming later"/);
   }
   for (const missing of ['unknown','unavailable']) {
     const states = makeStates();
@@ -311,7 +356,7 @@ test('Swedish placeholders are localized, disabled and preserve estimated empty'
   await Promise.resolve();
   assert.match(card.shadowRoot.innerHTML, /Kalibrera vågen/);
   assert.match(card.shadowRoot.innerHTML, /Endast inställningar/);
-  assert.equal(card.shadowRoot.innerHTML.split('class="pending-btn" disabled').length - 1, 3);
+  assert.equal((card.shadowRoot.innerHTML.match(/class="pending-btn(?: low-refill)?" disabled/g)||[]).length,3);
 });
 
 test('usage modes render their matching colored icons and accessible localized titles', async () => {
@@ -409,25 +454,25 @@ test('diagnostic panel has a symmetric two-by-two grid with icons below labels',
   assert.ok(html.includes('font-size:13px;font-weight:700;text-align:center'));
 });
 
-test('both embedded Swedish and English translation dictionaries remain synchronized', () => {
-  const match = js.match(/const L=(\{[\s\S]*?\});\s*const CSS=/);
-  assert.ok(match, 'embedded Swedish/English translation object exists');
-  const translations = JSON.parse(match[1]);
-  const sv = Object.keys(translations.sv).sort();
-  const en = Object.keys(translations.en).sort();
-  assert.equal(sv.length, 66);
-  assert.deepEqual(sv, en);
-  for (const key of sv) {
-    assert.ok(translations.sv[key].trim(), 'Swedish: ' + key);
-    assert.ok(translations.en[key].trim(), 'English: ' + key);
+test('bundled translations contain synchronized Swedish, English, Spanish and Finnish dictionaries', () => {
+  const match=js.match(/const L=(\{[\s\S]*?\});\s*function normalizeTitle/);
+  assert.ok(match,'generated translation dictionary exists');
+  const dictionaries=JSON.parse(match[1]);
+  const en=Object.keys(dictionaries.en).sort();
+  for(const locale of ['en','sv','es','fi']){
+    assert.deepEqual(Object.keys(dictionaries[locale]).sort(),en,locale);
+    for(const key of en)assert.ok(dictionaries[locale][key].trim(),locale+'.'+key);
   }
-  for (const key of ['mode', 'errorTitle', 'calibrationTitle', 'lowTitle',
-                     'estimatedEmpty', 'refillTank', 'recalibrateScale',
-                     'settingsOnly', 'comingLater', 'modeHeating']) {
-    assert.ok(translations.sv[key], key + ' Swedish');
-    assert.ok(translations.en[key], key + ' English');
+  assert.match(js,/VERSION="2026\.11\.0"/);
+});
+
+test('Spanish, Finnish and fallback locales render without mixing languages', async () => {
+  for(const [language,label] of [['es-ES','Gas restante'],['fi-FI','Kaasua jäljellä'],['zh-CN','Gas remaining'],['el-GR','Gas remaining']]){
+    const card=new Card();card.setConfig({language:'auto'});
+    card.hass={states:makeStates(),language};
+    await Promise.resolve();
+    assert.ok(card.shadowRoot.innerHTML.includes(label),language);
   }
-  assert.match(js, /VERSION="0\.1\.3"/);
 });
 
 test('show_history and show_diagnostics default to true for existing dashboards', async () => {
@@ -438,7 +483,7 @@ test('show_history and show_diagnostics default to true for existing dashboards'
   const html = card.shadowRoot.innerHTML;
   assert.match(html, /data-toggle="history"/);
   assert.match(html, /data-toggle="diag"/);
-  assert.match(html, /Senso4s Basic · 0\.1\.3/);
+  assert.match(html, /Senso4s Card · 2026\.11\.0/);
   assert.equal(card.getCardSize(), 6);
 });
 
@@ -549,8 +594,9 @@ test('mini is a single-row Mushroom-style display with only the requested data',
   await Promise.resolve();
   const html=card.shadowRoot.innerHTML;
   assert.match(html, /<ha-card class="mini-card"/);
-  assert.match(html, /class="mini-cylinder"/);
-  assert.match(html, /icon="mdi:gas-cylinder"/);
+  assert.match(html, /class="mini-brand"/);
+  assert.match(html, /class="mini-cylinder normal"/);
+  assert.match(html, /<ha-icon icon="mdi:gas-cylinder"><\/ha-icon>/);
   assert.match(html, /class="mini-weight"[^>]*>9,50 kg<\/div>/);
   assert.match(html, /class="mini-signals"/);
   assert.match(html, /class="mini-status good" role="img" aria-label="Batteri"/);
@@ -715,7 +761,7 @@ test('mini default Section width matches standard and remains resizable in HA la
   assert.equal(standard.getGridOptions().columns,12);
   assert.equal(mini.getGridOptions().rows,'auto');
   assert.equal(mini.getCardSize(),1);
-  assert.equal(js.includes('grid-template-columns:40px minmax(0,1fr) auto'),true);
+  assert.equal(js.includes('grid-template-columns:86px minmax(0,1fr) auto'),true);
 });
 
 test('existing Mini remains minimal by default; Standard retains its placeholders', async () => {
@@ -754,7 +800,7 @@ test('Mini with show_actions displays only disabled Calibrate between mass and B
 });
 
 test('Mini Refill appears strictly below 10 percent and all actions remain disabled', async () => {
-  for(const [value,shouldRefill] of [[0,true],[9,true],[9.99,true],[10,false],[11,false],[95,false],['unknown',false],['unavailable',false]]){
+  for(const [value,shouldRefill] of [[0,true],[9,true],[9.99,true],[10,true],[11,false],[95,false],['unknown',false],['unavailable',false]]){
     const states=makeStates();
     states['sensor.'+base+'_gas_level']=entity('gas_level',value);
     const card=new Card();card.setConfig({size:'mini',show_actions:true,language:'en'});
@@ -814,4 +860,633 @@ test('show_actions only accepts boolean values', () => {
     const card=new Card();
     assert.throws(()=>card.setConfig({show_actions:v}),/show_actions must be a boolean/);
   }
+});
+
+test('original SENSO brand icon is bundled into standalone JS as PNG data', () => {
+  assert.match(js,/const BRAND_ICON="data:image[/]png;base64,/);
+  const encoded=js.match(/const BRAND_ICON="data:image[/]png;base64,([^"]+)"/);
+  assert.ok(encoded&&encoded[1]);
+  // PNG signature plus IHDR width/height (128 x 128) in base64.
+  assert.match(encoded[1],/^iVBORw0KGgoAAAANSUhEUgAAAIAAAACAC/);
+  assert.ok(encoded[1].length>2000);
+  assert.equal(js.includes('cdn.'),false);
+});
+
+test('SENSO brand is visible alongside the gas cylinder in Mini and remains in Standard header', async () => {
+  for(const size of ['standard','mini']){
+    const card=new Card();
+    card.setConfig({size,show_actions:size==='mini'});
+    card.hass={states:makeStates(),language:'sv'};
+    await Promise.resolve();
+    const html=card.shadowRoot.innerHTML;
+    if(size==='mini'){
+      assert.match(html,/class="mini-brand"/);
+      assert.match(html,/class="mini-brand-logo"><img src="data:image[/]png;base64,/);
+      assert.match(html,/class="mini-cylinder normal" role="img"/);
+      assert.match(html,/icon="mdi:gas-cylinder"/);
+      assert.equal(html.includes('class="logo"'),false);
+    }else{
+      assert.match(html,/class="logo"><img src="data:image[/]png;base64,/);
+      assert.match(html,/alt="Senso4s"/);
+      assert.equal(html.includes('class="mini-cylinder"'),false);
+    }
+    assert.equal(html.includes('http://'),false);
+    assert.equal(html.includes('https://'),false);
+  }
+});
+
+test('branding update preserves read-only semantics and mini width', () => {
+  const card=new Card();
+  card.setConfig({size:'mini'});
+  assert.equal(card.getGridOptions().columns,12);
+  assert.equal(js.includes('callService('),false);
+  assert.equal(js.includes('BRAND_ICON'),true);
+});
+
+test('real Plus model is detected from usage_mode even with all optional anomaly entities disabled', async () => {
+  const states=makeStates();
+  states['sensor.'+base+'_usage_mode']=entity('usage_mode','Caravanning',{is_plus_model:true});
+  const card=new Card();card.setConfig({language:'sv'});
+  card.hass={states,language:'sv'};
+  await Promise.resolve();
+  assert.equal(card._model(),'plus');
+  assert.match(card.shadowRoot.innerHTML,/<h2>Senso4s<\/h2>/);
+  card._diagOpen=true;card._schedule();await Promise.resolve();
+  const html=card.shadowRoot.innerHTML;
+  assert.match(html,/Plus-diagnostik är avaktiverad/);
+  assert.equal(html.includes('class="plus-heading"'),false);
+  assert.equal(html.includes('Temperaturavvikelse'),false);
+  assert.equal(html.includes('Lutningsavvikelse'),false);
+  assert.equal(html.includes('Rörelseavvikelse'),false);
+  assert.equal(html.includes('Plus-enheten rapporterar en avvikelse'),false);
+});
+
+test('Plus detection falls back to HA device registry when usage_mode is disabled', async () => {
+  const states=makeStates();
+  const id='sensor.'+base+'_gas_remaining';
+  const card=new Card();card.setConfig({language:'en'});
+  card.hass={
+    states,language:'en',
+    entities:{[id]:{entity_id:id,device_id:'plus-device-1'}},
+    devices:{'plus-device-1':{id:'plus-device-1',model:'Senso4s PLUS'}}
+  };
+  await Promise.resolve();
+  assert.equal(card._model(),'plus');
+  assert.match(card.shadowRoot.innerHTML,/<h2>Senso4s<\/h2>/);
+  card._diagOpen=true;card._schedule();await Promise.resolve();
+  assert.match(card.shadowRoot.innerHTML,/Plus diagnostics are disabled/);
+});
+
+test('explicit Basic flag takes priority over other guesses', async () => {
+  const states=makeStates();
+  states['sensor.'+base+'_usage_mode']=entity('usage_mode','Heating',{is_plus_model:false});
+  const card=new Card();card.setConfig({});
+  card.hass={states,language:'sv'};
+  await Promise.resolve();
+  assert.equal(card._model(),'basic');
+  card._diagOpen=true;card._schedule();await Promise.resolve();
+  assert.equal(card.shadowRoot.innerHTML.includes('Plus-diagnostik'),false);
+});
+
+test('synthetic Plus preview renders realistic mass and diagnostics without real HA entities', async () => {
+  const states=makeStates(),count=Object.keys(states).length;
+  const card=new Card();card.setConfig({language:'sv',demo_mode:'plus'});
+  card.hass={states,language:'sv',callApi:()=>{throw Error('No HA call allowed in demo');}};
+  await Promise.resolve();
+  assert.equal(card._model(),'plus');
+  assert.match(card.shadowRoot.innerHTML,/DEMO – fiktiv enhet/);
+  assert.match(card.shadowRoot.innerHTML,/6,80 kg/);
+  assert.match(card.shadowRoot.innerHTML,/<h2>Senso4s<\/h2>/);
+  assert.equal(Object.keys(states).length,count);
+  assert.equal(Object.keys(states).some(x=>x.includes('_demo_')),false);
+  card._diagOpen=true;card._schedule();await Promise.resolve();
+  const html=card.shadowRoot.innerHTML;
+  assert.match(html,/Plus-diagnostik/);
+  assert.match(html,/Rörelseavvikelse/);
+  assert.equal(html.includes('Ej aktiverad / saknar värde'),false);
+});
+
+test('synthetic Plus tilt warning highlights the actual anomaly', async () => {
+  const card=new Card();card.setConfig({language:'en',demo_mode:'plus_warning'});
+  card.hass={states:{},language:'en'};
+  await Promise.resolve();card._diagOpen=true;card._schedule();await Promise.resolve();
+  const html=card.shadowRoot.innerHTML;
+  assert.match(html,/Plus scale reports an anomaly/);
+  assert.match(html,/class="status warn"/);
+  const index=html.indexOf('Tilt anomaly');
+  assert.ok(index>0);
+  assert.match(html.slice(index,index+300),/class="diag-visual bad"/);
+  assert.match(html.slice(index,index+300),/mdi:angle-acute/);
+});
+
+test('Plus with all optional sensors disabled hides diagnostic tiles', async () => {
+  const card=new Card();card.setConfig({language:'sv',demo_mode:'plus_disabled'});
+  card.hass={states:{},language:'sv'};
+  await Promise.resolve();card._diagOpen=true;card._schedule();await Promise.resolve();
+  const html=card.shadowRoot.innerHTML;
+  assert.equal(card._model(),'plus');
+  assert.match(html,/Plus-diagnostik är avaktiverad/);
+  assert.equal(html.includes('class="plus-heading"'),false);
+  assert.equal(html.includes('Temperaturavvikelse'),false);
+  assert.equal(html.includes('Lutningsavvikelse'),false);
+  assert.equal(html.includes('Plus-enheten rapporterar en avvikelse'),false);
+});
+
+test('Plus explicitly unavailable sensor reports Problem, not healthy or disabled', async () => {
+  const card=new Card();card.setConfig({language:'sv',demo_mode:'plus_unavailable'});
+  card.hass={states:{},language:'sv'};
+  await Promise.resolve();card._diagOpen=true;card._schedule();await Promise.resolve();
+  const html=card.shadowRoot.innerHTML;
+  assert.match(html,/class="status warn">Problem/);
+  assert.match(html,/En eller flera Plus-sensorer är otillgängliga/);
+  const index=html.indexOf('Temperaturavvikelse');
+  assert.ok(index>0);
+  assert.match(html.slice(index,index+400),/class="diag-visual bad"/);
+  assert.match(html.slice(index,index+400),/mdi:alert-circle/);
+  const mini=new Card();mini.setConfig({language:'en',size:'mini',demo_mode:'plus_unavailable'});
+  mini.hass={states:{},language:'en'};await Promise.resolve();
+  assert.match(mini.shadowRoot.innerHTML,/PLUS \?/);
+});
+
+test('Partially disabled Plus diagnostics show only enabled tiles', async () => {
+  const states=makeStates();
+  states['sensor.'+base+'_usage_mode']=entity('usage_mode','Heating',{is_plus_model:true});
+  states['binary_sensor.'+base+'_has_anomaly']={entity_id:'binary_sensor.'+base+'_has_anomaly',state:'off',attributes:{}};
+  const card=new Card();card.setConfig({language:'en'});
+  card.hass={states,language:'en'};
+  await Promise.resolve();card._diagOpen=true;card._schedule();await Promise.resolve();
+  const html=card.shadowRoot.innerHTML;
+  assert.match(html,/Overall anomaly/);
+  assert.match(html,/Some Plus diagnostic sensors are disabled/);
+  assert.equal(html.includes('Temperature anomaly'),false);
+  assert.equal(html.includes('Plus diagnostics are disabled'),false);
+});
+
+test('Active Plus sensor with unknown state is neutral, not Problem', async () => {
+  const states=makeStates();
+  states['sensor.'+base+'_usage_mode']=entity('usage_mode','Heating',{is_plus_model:true});
+  states['binary_sensor.'+base+'_temperature_anomaly']={entity_id:'binary_sensor.'+base+'_temperature_anomaly',state:'unknown',attributes:{}};
+  const card=new Card();card.setConfig({language:'en'});
+  card.hass={states,language:'en'};
+  await Promise.resolve();card._diagOpen=true;card._schedule();await Promise.resolve();
+  const html=card.shadowRoot.innerHTML;
+  const i=html.indexOf('Temperature anomaly');assert.ok(i>0);
+  assert.match(html.slice(i,i+350),/class="diag-visual neutral"/);
+  assert.equal(html.includes('One or more Plus sensors are unavailable'),false);
+});
+
+test('synthetic Basic preview has no Plus badge or Plus diagnostic section', async () => {
+  const card=new Card();card.setConfig({language:'sv',demo_mode:'basic'});
+  card.hass={states:{},language:'sv'};
+  await Promise.resolve();card._diagOpen=true;card._schedule();await Promise.resolve();
+  assert.equal(card._model(),'basic');
+  assert.match(card.shadowRoot.innerHTML,/<h2>Senso4s<\/h2>/);
+  assert.equal(card.shadowRoot.innerHTML.includes('Plus-diagnostik'),false);
+  assert.match(card.shadowRoot.innerHTML,/DEMO – fiktiv enhet/);
+});
+
+test('synthetic demo history never calls Home Assistant Recorder', async () => {
+  let requests=0;
+  const card=new Card();card.setConfig({language:'sv',demo_mode:'plus'});
+  card.hass={states:{},language:'sv',callApi:async()=>{requests++;throw Error('Forbidden');}};
+  await Promise.resolve();
+  await card._loadHistory();
+  await Promise.resolve();
+  assert.equal(requests,0);
+  assert.equal(card._history.length,3);
+  assert.match(card._chart(),/stroke-width="3"/);
+  assert.equal(card._history[0].length,9);
+});
+
+test('Mini Plus preview stays one row and marks Plus warning', async () => {
+  const card=new Card();card.setConfig({size:'mini',language:'sv',demo_mode:'plus_warning'});
+  card.hass={states:{},language:'sv'};
+  await Promise.resolve();
+  const html=card.shadowRoot.innerHTML;
+  assert.match(html,/mini-weight-wrap/);
+  assert.match(html,/mini-plus warn/);
+  assert.match(html,/PLUS !/);
+  assert.match(html,/DEMO – fiktiv enhet/);
+  assert.equal(card.getCardSize(),1);
+  assert.equal(card.getGridOptions().columns,12);
+});
+
+test('editor exposes synthetic Basic/Plus scenarios without losing card settings', () => {
+  const editor=new Editor();
+  editor.setConfig({size:'mini',language:'sv',show_actions:false});
+  editor.hass={states:makeStates(),language:'sv'};
+  const html=editor.shadowRoot.innerHTML;
+  assert.match(html,/data-field="demo_mode"/);
+  assert.match(html,/Simulerad Plus \(normal\)/);
+  assert.match(html,/extrasensorer avstängda/);
+  editor._handleChange({target:{dataset:{field:'demo_mode'},type:'select-one',value:'plus_disabled'}});
+  const config=editor.events.at(-1).detail.config;
+  assert.equal(config.demo_mode,'plus_disabled');
+  assert.equal(config.size,'mini');
+  assert.equal(config.show_actions,false);
+});
+
+test('invalid demo modes cannot accidentally enable synthetic data', () => {
+  const card=new Card();
+  assert.throws(()=>card.setConfig({demo_mode:'true'}),/invalid demo_mode/);
+  assert.throws(()=>card.setConfig({demo_mode:true}),/invalid demo_mode/);
+  assert.throws(()=>card.setConfig({demo_mode:'plus_special'}),/invalid demo_mode/);
+});
+
+test('one active Plus anomaly triggers warning even if overall anomaly entity is disabled', async () => {
+  const states=makeStates();
+  states['sensor.'+base+'_usage_mode']=entity('usage_mode','Caravanning',{is_plus_model:true});
+  states['binary_sensor.'+base+'_incline_anomaly']={entity_id:'binary_sensor.'+base+'_incline_anomaly',state:'on'};
+  const card=new Card();card.setConfig({language:'sv'});
+  card.hass={states,language:'sv'};
+  await Promise.resolve();
+  assert.equal(card._plusAlert(),true);
+  assert.match(card.shadowRoot.innerHTML,/class="status warn"/);
+  assert.match(card.shadowRoot.innerHTML,/Avvikelse/);
+  assert.match(card.shadowRoot.innerHTML,/Plus-enheten rapporterar en avvikelse/);
+  card._diagOpen=true;card._schedule();await Promise.resolve();
+  const i=card.shadowRoot.innerHTML.indexOf('Lutningsavvikelse');
+  assert.ok(i>=0);
+  assert.match(card.shadowRoot.innerHTML.slice(i,i+320),/class="diag-visual bad"/);
+  const mini=new Card();mini.setConfig({size:'mini',language:'sv'});
+  mini.hass={states,language:'sv'};
+  await Promise.resolve();
+  assert.match(mini.shadowRoot.innerHTML,/PLUS !/);
+});
+
+test('editor stores demo mode separately from real scale selection and can switch it off', () => {
+  const editor=new Editor();
+  editor.setConfig({entity:'sensor.'+base+'_gas_remaining',demo_mode:'plus'});
+  assert.match(editor.shadowRoot.innerHTML,/data-real-entity/);
+  assert.match(editor.shadowRoot.innerHTML,/data-field="demo_mode"/);
+  editor._handleChange({target:{dataset:{field:'demo_mode'},type:'select-one',value:'off'}});
+  const cfg=editor.events.at(-1).detail.config;
+  assert.equal(cfg.demo_mode,'off');
+  assert.equal(cfg.entity,'sensor.'+base+'_gas_remaining');
+});
+
+test('Mini cylinder icon works for Basic, Plus, and every synthetic preview', async () => {
+  for(const demo_mode of ['off','basic','plus','plus_warning','plus_disabled']){
+    const card=new Card();
+    card.setConfig({size:'mini',demo_mode});
+    card.hass={states:demo_mode==='off'?makeStates():{},language:'sv'};
+    await Promise.resolve();
+    const html=card.shadowRoot.innerHTML;
+    assert.match(html, /<ha-icon icon="mdi:gas-cylinder"><\/ha-icon>/);
+    assert.match(html, /class="mini-cylinder normal"/);
+    assert.match(html, /class="mini-brand-logo"><img src="data:image[/]png;base64,/);
+    assert.equal(card.getGridOptions().columns,12);
+    assert.equal(card.getCardSize(),1);
+  }
+});
+
+test('demo history labels generated data and never attributes it to Recorder', async () => {
+  for (const [language,expected] of [['sv','Simulerad historik'],['en','Simulated history']]) {
+    const card=new Card();
+    card.setConfig({language,demo_mode:'plus'});
+    let called=0;
+    card.hass={states:{},language,callApi:async()=>{called++;throw Error('Unexpected Recorder access');}};
+    await Promise.resolve();
+    card._historyOpen=true;
+    await card._loadHistory();
+    await Promise.resolve();
+    const html=card.shadowRoot.innerHTML;
+    assert.match(html,new RegExp(expected));
+    assert.equal(html.includes('Historiken hämtas från Home Assistant Recorder.'),false);
+    assert.equal(html.includes('History comes from Home Assistant Recorder.'),false);
+    assert.equal(called,0);
+  }
+});
+test('real card keeps Recorder attribution in history', async () => {
+  const card=new Card();
+  card.setConfig({language:'sv'});
+  card.hass={states:makeStates(),language:'sv'};
+  await Promise.resolve();
+  card._historyOpen=true;
+  card._schedule();
+  await Promise.resolve();
+  assert.match(card.shadowRoot.innerHTML,/Historiken hämtas från Home Assistant Recorder/);
+  assert.equal(card.shadowRoot.innerHTML.includes('Simulerad historik'),false);
+});
+
+test('Mini gas-cylinder background follows gas level, threshold and unknown state', async () => {
+  const scenarios=[
+    {level:92,expected:'normal'},
+    {level:19,expected:'warn'},
+    {level:10,expected:'bad'},
+    {level:4,expected:'bad'},
+    {level:'unknown',expected:'neutral'},
+    {level:-3,expected:'neutral'},
+    {level:101,expected:'neutral'}
+  ];
+  for(const {level,expected} of scenarios){
+    const states=makeStates();
+    states['sensor.'+base+'_gas_level']=entity('gas_level',level);
+    const card=new Card();card.setConfig({size:'mini',language:'sv'});
+    card.hass={states,language:'sv'};
+    await Promise.resolve();
+    const html=card.shadowRoot.innerHTML;
+    assert.equal(card._cylinderSeverity(),expected,String(level));
+    assert.ok(html.includes('class="mini-cylinder '+expected+'"'),String(level));
+    assert.match(html,/class="mini-brand-logo"><img src="data:image[/]png;base64,/);
+  }
+});
+
+test('Mini honors integration low_gas warning threshold even above 10%', async () => {
+  const states=makeStates();
+  states['sensor.'+base+'_gas_level']=entity('gas_level',17);
+  states['binary_sensor.'+base+'_low_gas']={entity_id:'binary_sensor.'+base+'_low_gas',state:'on'};
+  const card=new Card();card.setConfig({size:'mini',language:'sv'});
+  card.hass={states,language:'sv'};
+  await Promise.resolve();
+  assert.equal(card._cylinderSeverity(),'bad');
+  assert.match(card.shadowRoot.innerHTML,/class="mini-cylinder bad"/);
+});
+
+test('Mini keeps both icons with Plus warning and when quick actions are enabled', async () => {
+  const card=new Card();
+  card.setConfig({size:'mini',demo_mode:'plus_warning',show_actions:true,language:'sv'});
+  card.hass={states:{},language:'sv'};
+  await Promise.resolve();
+  const html=card.shadowRoot.innerHTML;
+  assert.match(html,/class="mini-brand-logo"><img src="data:image[/]png;base64,/);
+  assert.match(html,/class="mini-cylinder normal"/);
+  assert.match(html,/PLUS !/);
+  assert.match(html,/class="mini-shell with-actions"/);
+  assert.match(html,/class="mini-action /);
+  assert.match(html,/\.mini-shell\.with-actions\{grid-template-columns:86px/);
+  assert.match(html,/@media\(max-width:300px\)/);
+  assert.equal(card.getGridOptions().columns,12);
+  assert.equal(card.getCardSize(),1);
+});
+
+test('Mini color preview scenarios use synthetic Basic data with all requested severity bands', async () => {
+  const scenarios=[
+    {mode:'mini_blue',level:'20',color:'normal',mass:'2,00 kg'},
+    {mode:'mini_amber',level:'15',color:'warn',mass:'1,50 kg'},
+    {mode:'mini_red',level:'8',color:'bad',mass:'0,80 kg'},
+    {mode:'mini_neutral',level:'unknown',color:'neutral',mass:null},
+    {mode:'mini_low_gas',level:'30',color:'bad',mass:'3,00 kg'}
+  ];
+  for(const sc of scenarios){
+    const card=new Card();
+    card.setConfig({size:'mini',language:'sv',demo_mode:sc.mode});
+    const realStates=makeStates(),original=JSON.stringify(realStates);
+    card.hass={states:realStates,language:'sv',callApi:()=>{throw Error('DEMO may not call HA APIs');}};
+    await Promise.resolve();
+    const html=card.shadowRoot.innerHTML;
+    assert.equal(card._model(),'basic',sc.mode);
+    assert.equal(card._val('gas_level'),sc.level==='unknown'?null:sc.level,sc.mode);
+    assert.equal(card._cylinderSeverity(),sc.color,sc.mode);
+    assert.match(html,new RegExp('class="mini-cylinder '+sc.color+'"'),sc.mode);
+    assert.match(html,/DEMO – fiktiv enhet/,sc.mode);
+    assert.equal(html.includes('PLUS !'),false);
+    assert.match(html,/class="mini-brand-logo"><img src="data:image[/]png;base64,/,sc.mode);
+    if(sc.mass)assert.ok(html.includes(sc.mass),sc.mode);
+    else assert.match(html,/class="mini-weight"[^>]*>—<\/div>/,sc.mode);
+    assert.equal(JSON.stringify(realStates),original,'No real states modified by '+sc.mode);
+    assert.equal(Object.keys(realStates).some(k=>k.includes('demo')),false);
+    if(sc.mode==='mini_low_gas')assert.equal(card._val('low_gas'),'on');
+  }
+});
+
+test('Mini icons warn and turn critical for battery/BLE synthetic previews', async () => {
+  for(const [mode,battery,rssi,expected] of [
+    ['mini_icons_warn','15','-78','warn'],['mini_icons_critical','8','-90','bad'],
+    ['mini_neutral','unknown','unknown','neutral']
+  ]){
+    const card=new Card();card.setConfig({size:'mini',demo_mode:mode,language:'sv'});
+    card.hass={states:{},language:'sv'};await Promise.resolve();
+    assert.equal(card._val('battery'),battery==='unknown'?null:battery,mode);
+    assert.equal(card._val('rssi'),rssi==='unknown'?null:rssi,mode);
+    assert.equal(card._batterySeverity(),expected,mode);
+    assert.equal(card._signalSeverity(),expected,mode);
+    assert.match(card.shadowRoot.innerHTML,new RegExp('class="mini-status '+expected+'"'),mode);
+    if(expected==='neutral')assert.match(card.shadowRoot.innerHTML,/mdi:bluetooth-off/);
+  }
+});
+
+test('color demos are exposed in visual editor and persist when switching modes', async () => {
+  const editor=new Editor();editor.setConfig({size:'mini',language:'sv',demo_mode:'mini_amber',title:'Färgtest'});
+  editor.hass={states:makeStates(),language:'sv'};
+  const html=editor.shadowRoot.innerHTML;
+  for(const mode of ['mini_blue','mini_amber','mini_red','mini_neutral','mini_low_gas','mini_icons_warn','mini_icons_critical']){
+    assert.ok(html.includes('value="'+mode+'"'),mode);
+    const card=new Card();card.setConfig({demo_mode:mode,size:'mini'});
+    card.hass={states:{},language:'sv'};await Promise.resolve();
+    assert.match(card.shadowRoot.innerHTML,/DEMO/);
+  }
+  editor._handleChange({target:{dataset:{field:'demo_mode'},type:'select-one',value:'mini_red'}});
+  const saved=editor.events.at(-1).detail.config;
+  assert.equal(saved.demo_mode,'mini_red');
+  assert.equal(saved.title,'Färgtest');
+  assert.equal(saved.size,'mini');
+  editor._handleChange({target:{dataset:{field:'demo_mode'},type:'select-one',value:'off'}});
+  assert.equal(editor.events.at(-1).detail.config.demo_mode,'off');
+});
+
+test('new color preview modes do not change the independent real Basic view', async () => {
+  const states=makeStates();
+  states['sensor.'+base+'_usage_mode']=entity('usage_mode','Heating',{is_plus_model:false});
+  const card=new Card();
+  card.setConfig({language:'sv',size:'mini',demo_mode:'off'});
+  card.hass={states,language:'sv'};await Promise.resolve();
+  assert.equal(card._model(),'basic');
+  assert.equal(card._cylinderSeverity(),'normal');
+  assert.equal(card.shadowRoot.innerHTML.includes('DEMO'),false);
+  assert.equal(js.includes('callService('),false);
+});
+
+
+test('unified card registers renamed and legacy types without losing old dashboards', async () => {
+  assert.equal(typeof Card,'function');
+  assert.equal(typeof Editor,'function');
+  assert.equal(typeof LegacyCard,'function');
+  assert.equal(typeof LegacyEditor,'function');
+  const oldCard=new LegacyCard();
+  oldCard.setConfig({type:'custom:senso4s-basic-card',title:'Senso4s Basic',size:'mini'});
+  oldCard.hass={states:makeStates(),language:'sv'};
+  await Promise.resolve();
+  assert.equal(oldCard._title(),'Senso4s');
+  assert.match(oldCard.shadowRoot.innerHTML,/mini-cylinder normal/);
+  assert.ok(LegacyCard.getConfigElement() instanceof Editor);
+  assert.equal(sandbox.window.customCards.filter(x=>x.type==='senso4s-card').length,1);
+  assert.equal(sandbox.window.customCards.some(x=>x.name==='Senso4s Basic / Plus'),false);
+});
+
+test('renamed resources have identical compiled content and HACS metadata', async () => {
+  assert.equal(js,fs.readFileSync(path.join(__dirname,'..','senso4s-basic-card.js'),'utf8'));
+  const meta=JSON.parse(fs.readFileSync(path.join(__dirname,'..','hacs.json'),'utf8'));
+  assert.equal(meta.name,'Senso4s Card');
+  assert.equal(meta.filename,'senso4s-card.js');
+  const card=new Card();card.setConfig({title:'Senso4s Plus',language:'sv'});
+  card.hass={states:makeStates(),language:'sv'};await Promise.resolve();
+  assert.equal(card._title(),'Senso4s');
+  assert.match(card.shadowRoot.innerHTML,/<h2>Senso4s<\/h2>/);
+  assert.match(card.shadowRoot.innerHTML,/Senso4s Card · 2026\.11\.0/);
+  const e=new Editor();e.setConfig({title:'Senso4s Basic',size:'standard'});
+  assert.equal(e._config.title,'Senso4s');
+  e.setConfig({title:'Min egen titel'});
+  assert.equal(e._config.title,'Min egen titel');
+});
+
+
+test('LOW from integration at 30% triggers text and disabled Refill in Mini and Standard', async () => {
+  const states=makeStates();
+  states['sensor.'+base+'_gas_level']=entity('gas_level',30);
+  states['binary_sensor.'+base+'_low_gas']={entity_id:'binary_sensor.'+base+'_low_gas',state:'on'};
+  for(const size of ['mini','standard']){
+    const card=new Card();card.setConfig({size,show_actions:true,language:'sv'});
+    card.hass={states,language:'sv'};await Promise.resolve();
+    const html=card.shadowRoot.innerHTML;
+    assert.equal(card._lowGasWarning(),true);
+    assert.match(html,/Låg gasol/);
+    if(size==='mini'){
+      assert.match(html,/mini-cylinder bad/);
+      assert.match(html,/class="mini-low" role="status">Låg gasol/);
+      assert.match(html,/class="mini-action low-refill" disabled/);
+      assert.match(html,/Fyll på flaskan – Kommer senare/);
+    }else{
+      assert.match(html,/class="status bad">Låg gasol/);
+      assert.match(html,/class="bottle bad"/);
+      assert.match(html,/class="pending-btn low-refill" disabled/);
+      assert.match(html,/Fyll på flaskan/);
+    }
+  }
+});
+
+test('unknown level uses explicit sensor LOW and missing/inactive flags do not create a warning', async () => {
+  for(const flag of ['on','off','unknown','unavailable']){
+    const states=makeStates();
+    states['sensor.'+base+'_gas_level']=entity('gas_level','unknown');
+    states['binary_sensor.'+base+'_low_gas']={entity_id:'binary_sensor.'+base+'_low_gas',state:flag};
+    for(const size of ['mini','standard']){
+      const card=new Card();card.setConfig({size,show_actions:true,language:'en'});
+      card.hass={states,language:'en'};await Promise.resolve();
+      assert.equal(card._lowGasWarning(),flag==='on');
+      const html=card.shadowRoot.innerHTML;
+      assert.equal(html.includes('low-refill" disabled'),flag==='on');
+      if(size==='mini')assert.equal(html.includes('class="mini-low"'),flag==='on');
+      else assert.equal(html.includes('class="bottle bad"'),flag==='on');
+    }
+  }
+});
+
+test('LOW text and disabled Refill localize across all four languages', async () => {
+  for(const [language,label] of [['sv','Låg gasol'],['en','Low gas'],['es','Poco gas'],['fi','Kaasu vähissä']]){
+    for(const size of ['mini','standard']){
+      const card=new Card();card.setConfig({size,show_actions:true,language,demo_mode:'mini_low_gas'});
+      card.hass={states:{},language,callApi:()=>{throw Error('No HA calls in DEMO');}};
+      await Promise.resolve();
+      assert.match(card.shadowRoot.innerHTML,new RegExp(label));
+      assert.match(card.shadowRoot.innerHTML,/low-refill" disabled/);
+    }
+  }
+});
+
+test('8 percent fallback shows LOW text; 15 percent no flag keeps amber without refill', async () => {
+  for(const [mode,low] of [['mini_red',true],['mini_amber',false],['mini_blue',false],['mini_neutral',false]]){
+    for(const size of ['mini','standard']){
+      const card=new Card();card.setConfig({size,show_actions:true,language:'sv',demo_mode:mode});
+      card.hass={states:{},language:'sv'};await Promise.resolve();
+      assert.equal(card._lowGasWarning(),low,mode);
+      const html=card.shadowRoot.innerHTML;
+      assert.equal(html.includes('Fyll på flaskan'),low,mode+'/'+size);
+      if(size==='mini')assert.equal(html.includes('class="mini-low"'),low);
+      else assert.equal(html.includes('class="bottle bad"'),low);
+    }
+  }
+});
+
+
+test('Senso4s configurable LOW threshold adjusts both Mini and Standard colors and Refill', async () => {
+  const cases=[
+    [10,10,'on','bad'],[10,11,'off','warn'],[10,19,'off','warn'],[10,20,'off','normal'],
+    [15,15,'on','bad'],[15,16,'off','warn'],[15,24,'off','warn'],[15,25,'off','normal'],
+    [20,20,'on','bad'],[20,21,'off','warn'],[20,29,'off','warn'],[20,30,'off','normal'],
+    [50,50,'on','bad'],[50,59,'off','warn'],[50,60,'off','normal']
+  ];
+  for(const [threshold,level,flag,color] of cases){
+    const states=makeStates();
+    states['sensor.'+base+'_gas_level']=entity('gas_level',level);
+    states['binary_sensor.'+base+'_low_gas']={entity_id:'binary_sensor.'+base+'_low_gas',state:flag,attributes:{threshold}};
+    for(const size of ['mini','standard']){
+      const card=new Card();card.setConfig({size,show_actions:true,language:'sv'});
+      card.hass={states,language:'sv'};await Promise.resolve();
+      const html=card.shadowRoot.innerHTML,low=flag==='on';
+      assert.equal(card._lowThreshold(),threshold);
+      assert.equal(card._lowGasWarning(),low);
+      assert.equal(card._cylinderSeverity(),color);
+      assert.equal(html.includes('Fyll på flaskan'),low);
+      if(size==='mini'){
+        assert.match(html,new RegExp('mini-cylinder '+color));
+        assert.equal(html.includes('class="mini-low"'),low);
+      }else{
+        assert.match(html,new RegExp('class="bottle '+color+'"'));
+        assert.equal(html.includes('class="status bad">Låg gasol'),low);
+      }
+    }
+  }
+});
+
+test('OFF LOW state wins over local fallback even below the configured threshold', async () => {
+  for(const [flag,level,low,color] of [['off',8,false,'warn'],['on',30,true,'bad'],['off',20,false,'warn'],['off',25,false,'normal']]){
+    const states=makeStates();
+    states['sensor.'+base+'_gas_level']=entity('gas_level',level);
+    states['binary_sensor.'+base+'_low_gas']={entity_id:'binary_sensor.'+base+'_low_gas',state:flag,attributes:{threshold:15}};
+    const card=new Card();card.setConfig({size:'mini',show_actions:true,language:'sv'});
+    card.hass={states,language:'sv'};await Promise.resolve();
+    assert.equal(card._lowGasWarning(),low);
+    assert.equal(card._cylinderSeverity(),color);
+    assert.equal(card.shadowRoot.innerHTML.includes('class="mini-low"'),low);
+  }
+});
+
+test('missing or unavailable LOW uses threshold attribute or default ten percent', async () => {
+  const cases=[
+    ['unavailable',15,15,true,'bad',15],['unknown',20,25,false,'warn',20],
+    ['unavailable',20,30,false,'normal',20],[null,null,10,true,'bad',10],
+    [null,null,15,false,'warn',10],['off',15,8,false,'warn',15],
+    ['unavailable',200,11,false,'warn',10],['unknown',0,10,true,'bad',10],
+    ['unavailable',15,'unknown',false,'neutral',15]
+  ];
+  for(const [flag,threshold,level,low,color,effective] of cases){
+    const states=makeStates();
+    states['sensor.'+base+'_gas_level']=entity('gas_level',level);
+    if(flag!==null)states['binary_sensor.'+base+'_low_gas']={entity_id:'binary_sensor.'+base+'_low_gas',state:flag,attributes:{threshold}};
+    const card=new Card();card.setConfig({size:'mini',language:'sv',show_actions:true});
+    card.hass={states,language:'sv'};await Promise.resolve();
+    assert.equal(card._lowThreshold(),effective);
+    assert.equal(card._lowGasWarning(),low);
+    assert.equal(card._cylinderSeverity(),color);
+  }
+});
+
+test('15 percent threshold demo scenarios work in Mini and Standard and cannot alter HA', async () => {
+  const cases=[
+    ['mini_threshold_low_15',15,'on','bad',true],
+    ['mini_threshold_warn_15',15,'off','warn',false],
+    ['mini_threshold_blue_15',15,'off','normal',false],
+    ['mini_low_gas',30,'on','bad',true],
+    ['mini_red',10,'on','bad',true]
+  ];
+  for(const [mode,threshold,state,color,low] of cases){
+    for(const size of ['mini','standard']){
+      const states=makeStates(),before=JSON.stringify(states);
+      const card=new Card();card.setConfig({size,show_actions:true,language:'sv',demo_mode:mode});
+      card.hass={states,language:'sv',callApi:()=>{throw Error('No device actions in DEMO');}};
+      await Promise.resolve();
+      assert.equal(card._state('low_gas').attributes.threshold,threshold,mode);
+      assert.equal(card._val('low_gas'),state,mode);
+      assert.equal(card._lowGasWarning(),low,mode);
+      assert.equal(card._cylinderSeverity(),color,mode);
+      assert.equal(card.shadowRoot.innerHTML.includes('Fyll på flaskan'),low,mode);
+      if(size==='mini')assert.match(card.shadowRoot.innerHTML,new RegExp('mini-cylinder '+color));
+      else assert.match(card.shadowRoot.innerHTML,new RegExp('class="bottle '+color+'"'));
+      assert.equal(JSON.stringify(states),before);
+    }
+  }
+  const editor=new Editor();editor.setConfig({size:'mini',language:'sv'});
+  editor.hass={states:makeStates(),language:'sv'};
+  for(const [mode] of cases.slice(0,3))assert.ok(editor.shadowRoot.innerHTML.includes('value="'+mode+'"'));
 });
